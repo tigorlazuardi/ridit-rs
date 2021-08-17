@@ -2,9 +2,13 @@ use structopt::StructOpt;
 
 #[derive(StructOpt, Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
 pub enum AspectRatio {
+    /// Enables aspect ratio check
     Enable,
+    /// Disables aspect ratio check
     Disable,
+    /// Set aspect ratio height
     Height { input: u32 },
+    /// Set aspect ratio width
     Width { input: u32 },
 }
 
