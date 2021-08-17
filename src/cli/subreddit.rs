@@ -62,6 +62,7 @@ pub struct InputOnly {
 
 #[derive(Debug, StructOpt, Clone)]
 pub struct ListOptions {
-    #[structopt(short, long)]
+    /// Set output format. supported value: json, toml
+    #[structopt(short, long, default_value = "toml")]
     out_format: String,
 }
