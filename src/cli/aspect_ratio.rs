@@ -3,14 +3,19 @@ use structopt::StructOpt;
 #[derive(StructOpt, Debug, Clone, Copy)]
 pub enum AspectRatio {
     /// Enables aspect ratio check
+    #[structopt(visible_aliases = &["enabled", "e"])]
     Enable,
     /// Disables aspect ratio check
+    #[structopt(visible_aliases = &["disabled", "d"])]
     Disable,
     /// Set aspect ratio range
+    #[structopt(visible_alias = "r")]
     Range { input: f32 },
     /// Set aspect ratio height
+    #[structopt(visible_alias = "h")]
     Height { input: u32 },
     /// Set aspect ratio width
+    #[structopt(visible_alias = "w")]
     Width { input: u32 },
 }
 
