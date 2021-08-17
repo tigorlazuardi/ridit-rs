@@ -11,10 +11,14 @@ pub enum Subreddit {
 impl Subreddit {
     pub fn handle(&self, profile: &str) {
         match &self {
-            Self::Add(add) => add_subreddit(add, profile),
-            Self::Remove(rem) => remove_subreddit(rem, profile),
+            Self::Add(add) => Self::add_subreddit(add, profile),
+            Self::Remove(rem) => Self::remove_subreddit(rem, profile),
         }
     }
+
+    fn add_subreddit(add: &AddSubreddit, profile: &str) {}
+
+    fn remove_subreddit(remove: &RemoveSubreddit, profile: &str) {}
 }
 
 #[derive(Debug, StructOpt, Clone)]
@@ -28,7 +32,3 @@ pub struct AddSubreddit {
 pub struct RemoveSubreddit {
     input: Vec<String>,
 }
-
-fn add_subreddit(add: &AddSubreddit, profile: &str) {}
-
-fn remove_subreddit(remove: &RemoveSubreddit, profile: &str) {}
