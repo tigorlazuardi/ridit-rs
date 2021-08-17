@@ -7,13 +7,13 @@ pub enum Subreddit {
     /// Examples:
     ///
     /// adding subreddit using default settings: `ridit subreddit add wallpaper wallpapers`
-    #[structopt(aliases = &["insert", "update"])]
+    #[structopt(visible_aliases = &["insert", "update"])]
     Add(AddSubreddit),
     /// Remove subreddit(s) from subscription
-    #[structopt(aliases = &["delete", "rm"])]
+    #[structopt(visible_aliases = &["delete", "rm"])]
     Remove(InputOnly),
     /// List added subreddits
-    #[structopt(alias = "ls")]
+    #[structopt(visible_alias = "ls")]
     List(ListOptions),
 }
 
