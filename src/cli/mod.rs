@@ -4,6 +4,7 @@ pub mod subreddit;
 use structopt::StructOpt;
 
 #[derive(Debug, StructOpt, Clone)]
+#[structopt(name = "ridit", about = "Reddit image downloader written in rust")]
 pub struct Opt {
     /// Profile to use
     #[structopt(short, long, default_value = "main")]
