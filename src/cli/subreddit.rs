@@ -7,9 +7,14 @@ pub enum Subreddit {
     /// Examples:
     ///
     /// adding subreddit using default settings: `ridit subreddit add wallpaper wallpapers`
+    #[structopt(aliases = &["insert", "update"])]
     Add(AddSubreddit),
     /// Remove subreddit(s) from subscription
-    Remove(RemoveSubreddit),
+    #[structopt(aliases = &["delete", "rm"])]
+    Remove(InputOnly),
+    /// List added subreddits
+    #[structopt(alias = "ls")]
+    List(ListOptions),
 }
 
 impl Subreddit {
@@ -17,12 +22,15 @@ impl Subreddit {
         match &self {
             Self::Add(add) => Self::add_subreddit(add, profile),
             Self::Remove(rem) => Self::remove_subreddit(rem, profile),
+            Self::List(opts) => Self::list(opts, profile),
         }
     }
 
     fn add_subreddit(add: &AddSubreddit, profile: &str) {}
 
-    fn remove_subreddit(remove: &RemoveSubreddit, profile: &str) {}
+    fn remove_subreddit(remove: &InputOnly, profile: &str) {}
+
+    fn list(opts: &ListOptions, profile: &str) {}
 }
 
 #[derive(Debug, StructOpt, Clone)]
@@ -48,6 +56,12 @@ pub struct AddSubreddit {
 }
 
 #[derive(Debug, StructOpt, Clone)]
-pub struct RemoveSubreddit {
+pub struct InputOnly {
     input: Vec<String>,
+}
+
+#[derive(Debug, StructOpt, Clone)]
+pub struct ListOptions {
+    #[structopt(short, long)]
+    out_format: String,
 }
