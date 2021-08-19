@@ -1,4 +1,5 @@
 pub mod aspect_ratio;
+pub mod download;
 pub mod subreddit;
 
 use structopt::StructOpt;
@@ -18,6 +19,7 @@ impl Opt {
         match &self.subcmd {
             SubCommand::AspectRatio(aspect) => aspect.handle(&self.profile),
             SubCommand::Subreddit(sub) => sub.handle(&self.profile),
+            SubCommand::Download(dl) => dl.handle(&self.profile),
         }
     }
 }
@@ -68,4 +70,6 @@ pub enum SubCommand {
     /// Example adding subreddits while filtering content rated as nsfw:
     /// `ridit subreddit add --no-nsfw wallpaper wallpapers`
     Subreddit(subreddit::Subreddit),
+    /// Configures download settings.
+    Download(download::Download),
 }
