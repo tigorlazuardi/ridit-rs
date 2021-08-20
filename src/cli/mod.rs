@@ -20,6 +20,8 @@ impl Opt {
             SubCommand::AspectRatio(aspect) => aspect.handle(&self.profile),
             SubCommand::Subreddit(sub) => sub.handle(&self.profile),
             SubCommand::Download(dl) => dl.handle(&self.profile),
+            &SubCommand::Start => {}
+            &SubCommand::Daemon => {}
         }
     }
 }
@@ -72,4 +74,9 @@ pub enum SubCommand {
     Subreddit(subreddit::Subreddit),
     /// Configures download settings.
     Download(download::Download),
+    /// Start one time pass image download. If daemon is running, force the daemon to start
+    /// downloading them now.
+    Start,
+    /// Background process configuration and execution
+    Daemon,
 }
