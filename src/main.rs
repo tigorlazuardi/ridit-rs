@@ -1,4 +1,6 @@
-mod cli;
+pub mod api;
+pub mod cli;
+
 use cli::Opt;
 use structopt::StructOpt;
 
