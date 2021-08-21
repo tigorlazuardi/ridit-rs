@@ -2,6 +2,18 @@
 ## [Unreleased]
 
 
+<a name="v0.1.2"></a>
+## [v0.1.2] - 2021-08-21
+### Doc
+- create README.MD
+
+### License
+- create LICENSE
+
+### WIP
+- **config:** added config models
+
+
 <a name="v0.1.1"></a>
 ## [v0.1.1] - 2021-08-20
 ### Update
@@ -36,5 +48,6 @@
 - **cli:** moved functions to method
 
 
-[Unreleased]: https://github.com/tigorlazuardi/ridit-rs/compare/v0.1.1...HEAD
+[Unreleased]: https://github.com/tigorlazuardi/ridit-rs/compare/v0.1.2...HEAD
+[v0.1.2]: https://github.com/tigorlazuardi/ridit-rs/compare/v0.1.1...v0.1.2
 [v0.1.1]: https://github.com/tigorlazuardi/ridit-rs/compare/v0.1.0...v0.1.1
