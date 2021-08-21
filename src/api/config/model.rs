@@ -1,45 +1,28 @@
-use std::{
-	collections::HashMap,
-	default::Default,
-	ops::{Deref, DerefMut},
-	path::PathBuf,
-};
+use std::{collections::HashMap, default::Default, path::PathBuf};
 
 use directories::UserDirs;
 use serde::{Deserialize, Serialize};
 
-#[derive(Debug, Clone, Deserialize, Serialize)]
-struct Subreddits(HashMap<String, Subreddit>);
-
-impl Deref for Subreddits {
-	type Target = HashMap<String, Subreddit>;
-
-	fn deref(&self) -> &Self::Target {
-		&self.0
-	}
-}
-
-impl DerefMut for Subreddits {
-	fn deref_mut(&mut self) -> &mut Self::Target {
-		&mut self.0
-	}
-}
-
-impl Default for Subreddits {
-	fn default() -> Self {
-		let mut m = Subreddits(HashMap::new());
-		m.insert("wallpaper".to_string(), Subreddit::default());
-		m.insert("wallpapers".to_string(), Subreddit::default());
-		m
-	}
-}
-
-#[derive(Deserialize, Debug, Clone, Default, Serialize)]
+#[derive(Deserialize, Debug, Clone, Serialize)]
 pub struct Config {
 	download: Download,
-	subreddits: Subreddits,
+	subreddits: HashMap<String, Subreddit>,
 	aspect_ratio: AspectRatio,
 	minimum_size: MinimumSize,
+}
+
+impl Default for Config {
+	fn default() -> Self {
+		let mut m: HashMap<String, Subreddit> = HashMap::new();
+		m.insert("wallpaper".to_string(), Subreddit::default());
+		m.insert("wallpapers".to_string(), Subreddit::default());
+		Config {
+			download: Download::default(),
+			subreddits: m,
+			aspect_ratio: AspectRatio::default(),
+			minimum_size: MinimumSize::default(),
+		}
+	}
 }
 
 #[derive(Debug, Deserialize, Clone, Copy, Serialize)]
