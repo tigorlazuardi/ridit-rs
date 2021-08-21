@@ -1,6 +1,13 @@
 <a name="unreleased"></a>
 ## [Unreleased]
 
+### Format
+- format files using rustfmt config
+- added rustfmt config
+
+### WIP
+- **config:** added default implementations to config
+
 
 <a name="v0.1.2"></a>
 ## [v0.1.2] - 2021-08-21
