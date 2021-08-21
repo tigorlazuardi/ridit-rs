@@ -1,9 +1,18 @@
 <a name="unreleased"></a>
 ## [Unreleased]
 
+### Fix
+- **config:** proper `Default` implementation and added deref/derefmut for custom type
+
 ### Format
 - format files using rustfmt config
 - added rustfmt config
+
+### Refactor
+- **config:** removed deref for more ergonomic code
+
+### Update
+- **config:** added serialize derive
 
 ### WIP
 - **config:** added default implementations to config
