@@ -6,9 +6,9 @@ use std::{
 };
 
 use directories::UserDirs;
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 
-#[derive(Debug, Clone, Deserialize)]
+#[derive(Debug, Clone, Deserialize, Serialize)]
 struct Subreddits(HashMap<String, Subreddit>);
 
 impl Deref for Subreddits {
@@ -34,7 +34,7 @@ impl Default for Subreddits {
 	}
 }
 
-#[derive(Deserialize, Debug, Clone, Default)]
+#[derive(Deserialize, Debug, Clone, Default, Serialize)]
 pub struct Config {
 	download: Download,
 	subreddits: Subreddits,
@@ -42,7 +42,7 @@ pub struct Config {
 	minimum_size: MinimumSize,
 }
 
-#[derive(Debug, Deserialize, Clone, Copy)]
+#[derive(Debug, Deserialize, Clone, Copy, Serialize)]
 pub struct AspectRatio {
 	pub enable: bool,
 	pub height: u32,
@@ -61,7 +61,7 @@ impl Default for AspectRatio {
 	}
 }
 
-#[derive(Debug, Deserialize, Clone, Copy)]
+#[derive(Debug, Deserialize, Clone, Copy, Serialize)]
 pub struct MinimumSize {
 	pub enable: bool,
 	pub height: u32,
@@ -78,7 +78,7 @@ impl Default for MinimumSize {
 	}
 }
 
-#[derive(Deserialize, Debug, Clone)]
+#[derive(Deserialize, Debug, Clone, Serialize)]
 pub struct Download {
 	pub path: PathBuf,
 	pub connect_timeout: u32,
@@ -98,7 +98,7 @@ impl Default for Download {
 	}
 }
 
-#[derive(Deserialize, Debug, Clone, Copy)]
+#[derive(Deserialize, Debug, Clone, Copy, Serialize)]
 pub struct Subreddit {
 	pub nsfw: bool,
 	pub download_first: bool,
@@ -115,7 +115,7 @@ impl Default for Subreddit {
 	}
 }
 
-#[derive(Deserialize, Debug, Clone, Copy)]
+#[derive(Deserialize, Debug, Clone, Copy, Serialize)]
 #[serde(rename_all = "lowercase")]
 pub enum Sort {
 	Hot,
