@@ -5,5 +5,5 @@ use cli::Opt;
 use structopt::StructOpt;
 
 fn main() {
-    Opt::from_args().execute();
+	Opt::from_args().execute();
 }
