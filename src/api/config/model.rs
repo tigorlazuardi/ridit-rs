@@ -1,12 +1,43 @@
-use std::{collections::HashMap, path::PathBuf};
+use std::{
+	collections::HashMap,
+	default::Default,
+	ops::{Deref, DerefMut},
+	path::PathBuf,
+};
 
 use directories::UserDirs;
 use serde::Deserialize;
 
-#[derive(Deserialize, Debug, Clone)]
+#[derive(Debug, Clone, Deserialize)]
+struct Subreddits(HashMap<String, Subreddit>);
+
+impl Deref for Subreddits {
+	type Target = HashMap<String, Subreddit>;
+
+	fn deref(&self) -> &Self::Target {
+		&self.0
+	}
+}
+
+impl DerefMut for Subreddits {
+	fn deref_mut(&mut self) -> &mut Self::Target {
+		&mut self.0
+	}
+}
+
+impl Default for Subreddits {
+	fn default() -> Self {
+		let mut m = Subreddits(HashMap::new());
+		m.insert("wallpaper".to_string(), Subreddit::default());
+		m.insert("wallpapers".to_string(), Subreddit::default());
+		m
+	}
+}
+
+#[derive(Deserialize, Debug, Clone, Default)]
 pub struct Config {
 	download: Download,
-	subreddits: HashMap<String, Subreddit>,
+	subreddits: Subreddits,
 	aspect_ratio: AspectRatio,
 	minimum_size: MinimumSize,
 }
@@ -19,8 +50,8 @@ pub struct AspectRatio {
 	pub range: f32,
 }
 
-impl AspectRatio {
-	pub fn default() -> Self {
+impl Default for AspectRatio {
+	fn default() -> Self {
 		AspectRatio {
 			enable: true,
 			height: 9,
@@ -37,8 +68,8 @@ pub struct MinimumSize {
 	pub width: u32,
 }
 
-impl MinimumSize {
-	pub fn default() -> Self {
+impl Default for MinimumSize {
+	fn default() -> Self {
 		MinimumSize {
 			enable: true,
 			height: 1080,
@@ -53,8 +84,8 @@ pub struct Download {
 	pub connect_timeout: u32,
 }
 
-impl Download {
-	pub fn default() -> Self {
+impl Default for Download {
+	fn default() -> Self {
 		let dir = UserDirs::new().expect("failed to determine user directory");
 		let dir = dir
 			.picture_dir()
@@ -74,8 +105,8 @@ pub struct Subreddit {
 	pub sort: Sort,
 }
 
-impl Subreddit {
-	pub fn default() -> Self {
+impl Default for Subreddit {
+	fn default() -> Self {
 		Subreddit {
 			nsfw: true,
 			download_first: false,
@@ -92,4 +123,10 @@ pub enum Sort {
 	Rising,
 	Controversial,
 	Top,
+}
+
+impl Default for Sort {
+	fn default() -> Self {
+		Self::New
+	}
 }
