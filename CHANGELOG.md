@@ -1,6 +1,12 @@
 <a name="unreleased"></a>
 ## [Unreleased]
 
+
+<a name="v0.1.3"></a>
+## [v0.1.3] - 2021-08-23
+### Feature
+- **config:** added read config api
+
 ### Fix
 - **config:** proper `Default` implementation and added deref/derefmut for custom type
 
@@ -15,6 +21,7 @@
 - **config:** added serialize derive
 
 ### WIP
+- **config:** config now uses profile as top most key
 - **config:** added default implementations to config
 
 
@@ -64,6 +71,7 @@
 - **cli:** moved functions to method
 
 
-[Unreleased]: https://github.com/tigorlazuardi/ridit-rs/compare/v0.1.2...HEAD
+[Unreleased]: https://github.com/tigorlazuardi/ridit-rs/compare/v0.1.3...HEAD
+[v0.1.3]: https://github.com/tigorlazuardi/ridit-rs/compare/v0.1.2...v0.1.3
 [v0.1.2]: https://github.com/tigorlazuardi/ridit-rs/compare/v0.1.1...v0.1.2
 [v0.1.1]: https://github.com/tigorlazuardi/ridit-rs/compare/v0.1.0...v0.1.1
