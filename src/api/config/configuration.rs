@@ -4,19 +4,19 @@ use directories::UserDirs;
 use serde::{Deserialize, Serialize};
 
 #[derive(Deserialize, Debug, Clone, Serialize)]
-pub struct Config {
+pub struct Configuration {
 	download: Download,
 	subreddits: HashMap<String, Subreddit>,
 	aspect_ratio: AspectRatio,
 	minimum_size: MinimumSize,
 }
 
-impl Default for Config {
+impl Default for Configuration {
 	fn default() -> Self {
 		let mut m: HashMap<String, Subreddit> = HashMap::new();
 		m.insert("wallpaper".to_string(), Subreddit::default());
 		m.insert("wallpapers".to_string(), Subreddit::default());
-		Config {
+		Configuration {
 			download: Download::default(),
 			subreddits: m,
 			aspect_ratio: AspectRatio::default(),
