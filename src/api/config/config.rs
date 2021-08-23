@@ -37,7 +37,8 @@ pub async fn write_config(c: &Config) -> Result<()> {
 	Ok(())
 }
 
-/// Reads the whole config and set them as closure parameter.
+/// Reads the whole config and set them as closure parameter. On closure ends, the config variable
+/// will be written to disk.
 ///
 /// If returned closure contains Err value, it will short circuit and pass the Err value to the
 /// caller function.
@@ -55,6 +56,8 @@ where
 ///
 /// Get specific profile Configuration and write immediately after modification.
 /// Immediately short circuit and return error if profile does not exist.
+///
+/// On closure ends, the changes are written to disk.
 ///
 /// If returned closure contains Err value, it will short circuit and pass the Err value to the
 /// caller function.
