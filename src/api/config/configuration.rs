@@ -3,12 +3,14 @@ use std::{collections::HashMap, default::Default, path::PathBuf};
 use directories::UserDirs;
 use serde::{Deserialize, Serialize};
 
+pub type Subreddits = HashMap<String, Subreddit>;
+
 #[derive(Deserialize, Debug, Clone, Serialize)]
 pub struct Configuration {
-	download: Download,
-	subreddits: HashMap<String, Subreddit>,
-	aspect_ratio: AspectRatio,
-	minimum_size: MinimumSize,
+	pub download: Download,
+	pub subreddits: Subreddits,
+	pub aspect_ratio: AspectRatio,
+	pub minimum_size: MinimumSize,
 }
 
 impl Default for Configuration {
