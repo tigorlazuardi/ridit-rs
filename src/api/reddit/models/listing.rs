@@ -50,7 +50,7 @@ impl Listing {
 	fn get_filename_from_url(url: &str) -> Option<String> {
 		let s: String = url.split("/").last().unwrap().split("?").take(1).collect();
 		if let Some(ext) = s.split(".").last() {
-			if ext.len() > 3 || (ext != "jpg" && ext != "png" && ext != "jpeg") {
+			if ext.len() > 3 || (ext != "jpg" && ext != "png") {
 				return None;
 			}
 			return Some(s);
