@@ -1,10 +1,22 @@
 <a name="unreleased"></a>
 ## [Unreleased]
 
+
+<a name="v0.1.4"></a>
+## [v0.1.4] - 2021-08-23
 ### Doc
 - **config:** update modify config explanation
 
+### Feature
+- **listing:** added image size and minimum size check
+
+### Fix
+- **listing:** fix extension check
+
 ### WIP
+- **config:** exposed configuration struct
+- **config:** added active daemon for subreddits that will be downloaded by daemon
+- **config:** added active settings
 - **config:** added modify config by profile
 - **config:** added write config and modify config api
 
@@ -78,7 +90,8 @@
 - **cli:** moved functions to method
 
 
-[Unreleased]: https://github.com/tigorlazuardi/ridit-rs/compare/v0.1.3...HEAD
+[Unreleased]: https://github.com/tigorlazuardi/ridit-rs/compare/v0.1.4...HEAD
+[v0.1.4]: https://github.com/tigorlazuardi/ridit-rs/compare/v0.1.3...v0.1.4
 [v0.1.3]: https://github.com/tigorlazuardi/ridit-rs/compare/v0.1.2...v0.1.3
 [v0.1.2]: https://github.com/tigorlazuardi/ridit-rs/compare/v0.1.1...v0.1.2
 [v0.1.1]: https://github.com/tigorlazuardi/ridit-rs/compare/v0.1.0...v0.1.1
