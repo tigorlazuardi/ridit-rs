@@ -1,12 +1,46 @@
-use std::{collections::HashMap, path::PathBuf};
+use std::{
+	collections::HashMap,
+	ops::{Deref, DerefMut},
+	path::PathBuf,
+};
 
 use anyhow::{Context, Result};
 use directories::ProjectDirs;
+use serde::{Deserialize, Serialize};
 use tokio::fs;
 
 use super::configuration::Configuration;
 
-pub type Config = HashMap<String, Configuration>;
+#[derive(Debug, Deserialize, Serialize, Clone)]
+pub struct Config {
+	pub active: String,
+	pub settings: HashMap<String, Configuration>,
+}
+
+impl Deref for Config {
+	type Target = HashMap<String, Configuration>;
+
+	fn deref(&self) -> &Self::Target {
+		&self.settings
+	}
+}
+
+impl DerefMut for Config {
+	fn deref_mut(&mut self) -> &mut Self::Target {
+		&mut self.settings
+	}
+}
+
+impl Default for Config {
+	fn default() -> Self {
+		let mut m: HashMap<String, Configuration> = HashMap::new();
+		m.insert("main".to_string(), Configuration::default());
+		Config {
+			active: "main".to_string(),
+			settings: m,
+		}
+	}
+}
 
 fn project_dir() -> ProjectDirs {
 	ProjectDirs::from("id.web", "tigor", "ridit").unwrap()
