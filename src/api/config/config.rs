@@ -13,7 +13,10 @@ use super::configuration::Configuration;
 
 #[derive(Debug, Deserialize, Serialize, Clone)]
 pub struct Config {
+	/// Profile to set configurations to
 	pub active: String,
+	/// Subreddits that will be downloaded by daemon
+	pub active_daemon: Vec<String>,
 	pub settings: HashMap<String, Configuration>,
 }
 
@@ -37,6 +40,7 @@ impl Default for Config {
 		m.insert("main".to_string(), Configuration::default());
 		Config {
 			active: "main".to_string(),
+			active_daemon: vec!["main".to_string()],
 			settings: m,
 		}
 	}
