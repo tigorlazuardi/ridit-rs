@@ -1,5 +1,7 @@
 use serde::Deserialize;
 
+use crate::api::config::configuration::Configuration;
+
 use super::download_meta::DownloadMeta;
 
 #[derive(Deserialize)]
@@ -9,27 +11,37 @@ pub struct Listing {
 }
 
 impl Listing {
-	pub fn into_download_metas(self) -> Vec<DownloadMeta> {
+	pub fn into_download_metas(self, config: &Configuration) -> Vec<DownloadMeta> {
 		let mut result: Vec<DownloadMeta> = Vec::new();
 		for children in self.data.children.into_iter() {
 			let data = children.data;
 			if data.is_video {
 				continue;
 			}
-			// if data.over_18 && !config.downloads.nsfw {
-			//                 continue;
-			//             }
-			let image_size = if let Some(size) = data.get_image_size() {
-				size
-			} else {
+
+			let sub = config.subreddits.get(&data.subreddit).unwrap();
+
+			if data.over_18 && !sub.nsfw {
 				continue;
+			}
+
+			let image_size = match data.get_image_size() {
+				Some(s) => s,
+				None => continue,
 			};
 
-			let filename = if let Some(name) = Listing::get_filename_from_url(&data.url) {
-				name
-			} else {
-				continue;
+			let filename = match Listing::get_filename_from_url(&data.url) {
+				Some(name) => name,
+				None => continue,
 			};
+
+			if !Listing::passed_aspect_ratio(image_size, config) {
+				continue;
+			}
+
+			if !Listing::passed_mininum_size(image_size, config) {
+				continue;
+			}
 
 			let meta = DownloadMeta {
 				subreddit_name: data.subreddit,
@@ -56,6 +68,24 @@ impl Listing {
 			return Some(s);
 		}
 		None
+	}
+
+	fn passed_aspect_ratio(image_size: (u32, u32), config: &Configuration) -> bool {
+		if !config.aspect_ratio.enable {
+			return true;
+		}
+		let ar = config.aspect_ratio.width as f32 / config.aspect_ratio.height as f32;
+		let min_ratio = ar - config.aspect_ratio.range;
+		let max_ratio = ar + config.aspect_ratio.range;
+		let image_ratio = image_size.0 as f32 / image_size.1 as f32;
+		image_ratio >= min_ratio && image_ratio <= max_ratio
+	}
+
+	fn passed_mininum_size(image_size: (u32, u32), config: &Configuration) -> bool {
+		if !config.minimum_size.enable {
+			return true;
+		}
+		image_size.0 >= config.minimum_size.width && image_size.1 >= config.minimum_size.height
 	}
 }
 
