@@ -5,7 +5,13 @@ edition = '2018'
 
 [dependencies]
 structopt = '0.3'
-directories = "3.0"
+directories = '3.0'
+anyhow = '1'
+toml = '0.5'
+
+[dependencies.tokio]
+version = '1.10'
+features = ['full']
 
 [dependencies.serde]
 version = '1.0'
