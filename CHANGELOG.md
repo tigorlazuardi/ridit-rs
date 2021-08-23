@@ -1,6 +1,13 @@
 <a name="unreleased"></a>
 ## [Unreleased]
 
+### Doc
+- **config:** update modify config explanation
+
+### WIP
+- **config:** added modify config by profile
+- **config:** added write config and modify config api
+
 
 <a name="v0.1.3"></a>
 ## [v0.1.3] - 2021-08-23
