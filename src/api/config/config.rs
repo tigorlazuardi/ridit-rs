@@ -47,7 +47,9 @@ impl Default for Config {
 }
 
 fn project_dir() -> ProjectDirs {
-	ProjectDirs::from("id.web", "tigor", "ridit").unwrap()
+	ProjectDirs::from("id.web", "tigor", "ridit")
+		.context("failed to get project directory")
+		.unwrap()
 }
 
 fn filename() -> PathBuf {
