@@ -37,7 +37,7 @@ impl Repository {
 	pub async fn get_download_lists(&self, config: &Configuration) -> Vec<DownloadMeta> {
 		let mut result = vec![];
 
-		let (tx, mut rx) = mpsc::channel(8);
+		let (tx, mut rx) = mpsc::unbounded_channel();
 
 		for (name, subreddit) in config.subreddits.iter() {
 			let name = name.clone();
@@ -66,7 +66,7 @@ impl Repository {
 				})
 				.await;
 
-				tx.send(result).await.ok();
+				tx.send(result).ok();
 			});
 		}
 
