@@ -35,14 +35,6 @@ impl Listing {
 				None => continue,
 			};
 
-			if !Listing::passed_aspect_ratio(image_size, config) {
-				continue;
-			}
-
-			if !Listing::passed_mininum_size(image_size, config) {
-				continue;
-			}
-
 			let meta = DownloadMeta {
 				subreddit_name: data.subreddit,
 				post_link: format!("https://reddit.com{}", data.permalink),
@@ -54,6 +46,16 @@ impl Listing {
 				title: data.title,
 				author: data.author,
 			};
+
+			if sub.download_first {
+				result.push(meta);
+				continue;
+			}
+
+			if !meta.passed_checks(config) {
+				continue;
+			}
+
 			result.push(meta);
 		}
 		result
@@ -68,24 +70,6 @@ impl Listing {
 			return Some(s);
 		}
 		None
-	}
-
-	fn passed_aspect_ratio(image_size: (u32, u32), config: &Configuration) -> bool {
-		if !config.aspect_ratio.enable {
-			return true;
-		}
-		let ar = config.aspect_ratio.width as f32 / config.aspect_ratio.height as f32;
-		let min_ratio = ar - config.aspect_ratio.range;
-		let max_ratio = ar + config.aspect_ratio.range;
-		let image_ratio = image_size.0 as f32 / image_size.1 as f32;
-		image_ratio >= min_ratio && image_ratio <= max_ratio
-	}
-
-	fn passed_mininum_size(image_size: (u32, u32), config: &Configuration) -> bool {
-		if !config.minimum_size.enable {
-			return true;
-		}
-		image_size.0 >= config.minimum_size.width && image_size.1 >= config.minimum_size.height
 	}
 }
 
