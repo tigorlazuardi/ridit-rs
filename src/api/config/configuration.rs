@@ -1,4 +1,4 @@
-use std::{collections::HashMap, default::Default, path::PathBuf};
+use std::{collections::HashMap, default::Default, fmt::Display, path::PathBuf};
 
 use directories::UserDirs;
 use serde::{Deserialize, Serialize};
@@ -113,5 +113,17 @@ pub enum Sort {
 impl Default for Sort {
 	fn default() -> Self {
 		Self::New
+	}
+}
+
+impl Display for Sort {
+	fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+		match self {
+			Self::Hot => write!(f, "hot"),
+			Self::New => write!(f, "new"),
+			Self::Rising => write!(f, "rising"),
+			Self::Controversial => write!(f, "controversial"),
+			Self::Top => write!(f, "top"),
+		}
 	}
 }
