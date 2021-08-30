@@ -2,10 +2,13 @@ pub mod aspect_ratio;
 pub mod download;
 pub mod subreddit;
 
-use structopt::StructOpt;
+use structopt::{
+	clap::{crate_authors, crate_version},
+	StructOpt,
+};
 
 #[derive(Debug, StructOpt, Clone)]
-#[structopt(name = "ridit", about = "Reddit image downloader written in rust")]
+#[structopt(name = "ridit", about = "Reddit image downloader written in rust", version = crate_version!(), author = crate_authors!())]
 pub struct Opt {
 	/// Profile to use
 	#[structopt(short, long, default_value = "main")]
@@ -21,7 +24,6 @@ impl Opt {
 			SubCommand::Subreddit(sub) => sub.handle(&self.profile),
 			SubCommand::Download(dl) => dl.handle(&self.profile),
 			&SubCommand::Start => {}
-			&SubCommand::Daemon => {}
 		}
 	}
 }
@@ -74,9 +76,6 @@ pub enum SubCommand {
 	Subreddit(subreddit::Subreddit),
 	/// Configures download settings.
 	Download(download::Download),
-	/// Start one time pass image download. If daemon is running, force the daemon to start
-	/// downloading them now.
+	/// Start the server
 	Start,
-	/// Background process configuration and execution
-	Daemon,
 }
