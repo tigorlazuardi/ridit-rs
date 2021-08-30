@@ -1,9 +1,13 @@
-use std::{sync::Arc, time::Duration};
+use std::{path::PathBuf, sync::Arc, time::Duration};
 
 use anyhow::{Context, Result};
 use backoff::future::retry;
 use backoff::ExponentialBackoff;
-use reqwest::Client;
+use reqwest::{Client, Response};
+use tokio::{
+	fs::{self, File},
+	io::AsyncWriteExt,
+};
 
 use super::models::download_meta::DownloadMeta;
 use crate::api::{
@@ -40,22 +44,35 @@ impl Repository {
 		let mut handlers = Vec::new();
 
 		for (name, subreddit) in config.subreddits.iter() {
+			let this = self.clone();
 			let name = name.clone();
 			let subreddit = subreddit.clone();
-			let client = self.client.clone();
 			let config = config.clone();
 			let handle = tokio::spawn(async move {
-				if let Ok(meta) =
-					Repository::download_listing(&*client, &*config, &name, subreddit).await
-				{
-					let mut handlers = Vec::new();
-					for meta in meta.into_iter() {
-						let handle = tokio::spawn(async move {});
-						handlers.push(handle);
+				let meta = match this.download_listing(&*config, &name, subreddit).await {
+					Ok(meta) => meta,
+					Err(e) => {
+						eprintln!("{}", e);
+						return;
 					}
-					for handle in handlers {
-						let _ = handle.await;
+				};
+
+				let mut handlers = Vec::new();
+				for meta in meta.into_iter() {
+					if Repository::file_exists(&*config, &meta).await {
+						continue;
 					}
+					let this = this.clone();
+					let config = config.clone();
+					let handle = tokio::spawn(async move {
+						if let Err(e) = this.download_image(&*config, &meta).await {
+							eprintln!("{}", e);
+						}
+					});
+					handlers.push(handle);
+				}
+				for handle in handlers {
+					let _ = handle.await;
 				}
 			});
 
@@ -67,7 +84,7 @@ impl Repository {
 	}
 
 	async fn download_listing(
-		client: &Client,
+		&self,
 		config: &Configuration,
 		name: &str,
 		subreddit: Subreddit,
@@ -77,22 +94,88 @@ impl Repository {
 			name, subreddit.sort
 		);
 
-		let result: Listing = retry(ExponentialBackoff::default(), || async {
-			Ok(client
-				.get(&listing_url)
-				.send()
-				.await
-				.with_context(|| format!("failed to get response from: {}", listing_url))?
-				.json()
-				.await
-				.with_context(|| {
-					format!(
-						"failed to deserialize json response body from: {}",
-						listing_url
-					)
-				})?)
+		println!("[{}] fetching listing", name);
+		let resp: Response = retry(ExponentialBackoff::default(), || async {
+			Ok(self.client.get(&listing_url).send().await?)
 		})
-		.await?;
+		.await
+		.with_context(|| {
+			format!(
+				"failed to open connecttion to download listing from: {}",
+				listing_url
+			)
+		})?;
+
+		let result: Listing = resp.json().await.with_context(|| {
+			format!(
+				"failed to deserialize json response body (unsupported body format) from: {}",
+				listing_url
+			)
+		})?;
 		Ok(result.into_download_metas(config))
+	}
+
+	async fn download_image(&self, config: &Configuration, meta: &DownloadMeta) -> Result<()> {
+		println!("[{}] downloading image {}", meta.subreddit_name, meta.url);
+		let response = retry(ExponentialBackoff::default(), || async {
+			Ok(self.client.get(&meta.url).send().await?)
+		})
+		.await
+		.with_context(|| {
+			format!(
+				"failed to open connection to download image from: {}",
+				meta.url
+			)
+		})?;
+
+		let temp_file = Repository::store_to_temp(response, meta).await?;
+		let download_dir = Repository::download_dir(config, meta);
+		let download_location = Repository::download_location(config, meta);
+
+		fs::create_dir_all(&download_dir).await.with_context(|| {
+			format!(
+				"failed to create download directory on: {}",
+				download_dir.display()
+			)
+		})?;
+		fs::copy(temp_file, &download_location)
+			.await
+			.with_context(|| {
+				format!(
+					"failed to copy file from tmp dir to {}",
+					download_location.display()
+				)
+			})?;
+
+		Ok(())
+	}
+
+	fn download_dir(config: &Configuration, meta: &DownloadMeta) -> PathBuf {
+		config.download.path.join(&meta.subreddit_name)
+	}
+
+	fn download_location(config: &Configuration, meta: &DownloadMeta) -> PathBuf {
+		Repository::download_dir(config, meta).join(&meta.filename)
+	}
+
+	async fn file_exists(config: &Configuration, meta: &DownloadMeta) -> bool {
+		fs::metadata(Repository::download_location(config, meta))
+			.await
+			.is_ok()
+	}
+
+	async fn store_to_temp(mut resp: Response, meta: &DownloadMeta) -> Result<PathBuf> {
+		let file_path = std::env::temp_dir().join("ridit").join(&meta.filename);
+		let mut file = File::create(&file_path)
+			.await
+			.context("cannot create file on tmp dir")?;
+
+		while let Some(chunk) = resp.chunk().await? {
+			file.write(&chunk)
+				.await
+				.context("failed to write to temp dir")?;
+		}
+
+		Ok(file_path)
 	}
 }
