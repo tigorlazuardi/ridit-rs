@@ -11,6 +11,8 @@ use tokio::fs;
 
 use super::configuration::Configuration;
 
+pub static CONFIG_FILENAME: &str = "ridit.toml";
+
 #[derive(Debug, Deserialize, Serialize, Clone)]
 pub struct Config {
 	/// Profile to set configurations to
@@ -51,7 +53,7 @@ fn project_dir() -> ProjectDirs {
 
 fn filename() -> PathBuf {
 	let pd = project_dir();
-	pd.config_dir().join("ridit.toml")
+	pd.config_dir().join(CONFIG_FILENAME)
 }
 
 pub async fn read_config() -> Result<Config> {
@@ -83,6 +85,14 @@ pub async fn modify_config<F>(mut f: F) -> Result<()>
 where
 	F: FnMut(&mut Config) -> Result<()>,
 {
+	if !config_exist().await {
+		write_config(&Config::default()).await?;
+		println!(
+			"file config does not exist. creating a new config on {}",
+			project_dir().config_dir().join(CONFIG_FILENAME).display()
+		);
+		return Ok(());
+	}
 	let mut config = read_config().await?;
 	f(&mut config)?;
 	write_config(&config).await?;
@@ -115,4 +125,10 @@ pub async fn create_config_dir() {
 	let pd = project_dir();
 	let pd = pd.config_dir();
 	fs::create_dir_all(&pd).await.ok();
+}
+
+pub async fn config_exist() -> bool {
+	let pd = project_dir();
+	let pd = pd.config_dir().join(CONFIG_FILENAME);
+	fs::metadata(pd).await.is_ok()
 }
