@@ -128,16 +128,19 @@ impl Repository {
 			)
 		})?;
 
+		{
+			let download_dir = Repository::download_dir(config, meta);
+			fs::create_dir_all(&download_dir).await.with_context(|| {
+				format!(
+					"failed to create download directory on: {}",
+					download_dir.display()
+				)
+			})?;
+		}
+
 		let temp_file = Repository::store_to_temp(response, meta).await?;
-		let download_dir = Repository::download_dir(config, meta);
 		let download_location = Repository::download_location(config, meta);
 
-		fs::create_dir_all(&download_dir).await.with_context(|| {
-			format!(
-				"failed to create download directory on: {}",
-				download_dir.display()
-			)
-		})?;
 		fs::copy(temp_file, &download_location)
 			.await
 			.with_context(|| {
