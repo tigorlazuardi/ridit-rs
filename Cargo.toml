@@ -6,9 +6,23 @@ edition = '2018'
 [dependencies]
 structopt = '0.3'
 directories = '3.0'
-anyhow = '1'
 toml = '0.5'
-reqwest = {version = '0.11', features = ['json']}
+tokio-retry = "0.3"
+
+[dependencies.retry_fn]
+version = '0.2'
+features = ['tokio-runtime']
+
+[dependencies.anyhow]
+version = '1'
+features = [
+    'std',
+    'backtrace',
+]
+
+[dependencies.reqwest]
+version = '0.11'
+features = ['json']
 
 [dependencies.backoff]
 version = '0.3'

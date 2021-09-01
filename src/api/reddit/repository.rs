@@ -1,21 +1,26 @@
 use std::{path::PathBuf, sync::Arc, time::Duration};
 
-use anyhow::{Context, Result};
-use backoff::future::retry;
-use backoff::ExponentialBackoff;
+use anyhow::{Context, Error, Result};
 use reqwest::{Client, Response};
 use tokio::{
 	fs::{self, File},
 	io::AsyncWriteExt,
 };
+use tokio_retry::{
+	strategy::{jitter, FixedInterval},
+	Retry,
+};
 
 use super::models::download_meta::DownloadMeta;
-use crate::api::{
-	config::{
-		config::Config,
-		configuration::{Configuration, Subreddit},
+use crate::{
+	api::{
+		config::{
+			config::Config,
+			configuration::{Configuration, Subreddit},
+		},
+		reddit::models::listing::Listing,
 	},
-	reddit::models::listing::Listing,
+	pkg::OnError,
 };
 
 #[derive(Clone, Debug)]
@@ -30,7 +35,7 @@ impl Repository {
 	pub fn new(config: Arc<Config>) -> Self {
 		let client = reqwest::Client::builder()
 			.user_agent(APP_USER_AGENT)
-			.connect_timeout(Duration::from_secs(5))
+			.connect_timeout(Duration::from_secs(10))
 			.build()
 			.context("failed to create request client")
 			.unwrap();
@@ -49,37 +54,42 @@ impl Repository {
 			let subreddit = subreddit.clone();
 			let config = config.clone();
 			let handle = tokio::spawn(async move {
-				let meta = match this.download_listing(&*config, &name, subreddit).await {
-					Ok(meta) => meta,
-					Err(e) => {
-						eprintln!("{}", e);
-						return;
-					}
-				};
-
-				let mut handlers = Vec::new();
-				for meta in meta.into_iter() {
-					if Repository::file_exists(&*config, &meta).await {
-						continue;
-					}
-					let this = this.clone();
-					let config = config.clone();
-					let handle = tokio::spawn(async move {
-						if let Err(e) = this.download_image(&*config, &meta).await {
-							eprintln!("{}", e);
-						}
-					});
-					handlers.push(handle);
-				}
-				for handle in handlers {
-					let _ = handle.await;
-				}
+				this.exec_download(config, &name, subreddit).await.ok();
 			});
-
 			handlers.push(handle);
 		}
 		for handle in handlers {
-			let _ = handle.await;
+			handle.await.log_error().ok();
+		}
+	}
+
+	async fn exec_download(
+		&self,
+		config: Arc<Configuration>,
+		name: &str,
+		subreddit: Subreddit,
+	) -> Result<()> {
+		let downloads = self.download_listing(&*config, name, subreddit).await?;
+		self.download_images(config, downloads).await;
+		Ok(())
+	}
+
+	async fn download_images(&self, config: Arc<Configuration>, downloads: Vec<DownloadMeta>) {
+		let mut handlers = Vec::new();
+		for meta in downloads.into_iter() {
+			if Repository::file_exists(&*config, &meta).await {
+				continue;
+			}
+			let this = self.clone();
+			let config = config.clone();
+			let handle = tokio::spawn(async move {
+				this.download_image(&*config, &meta).await?;
+				Ok::<(), Error>(())
+			});
+			handlers.push(handle);
+		}
+		for handle in handlers {
+			handle.await.log_error().ok();
 		}
 	}
 
@@ -95,8 +105,10 @@ impl Repository {
 		);
 
 		println!("[{}] fetching listing", name);
-		let resp: Response = retry(ExponentialBackoff::default(), || async {
-			Ok(self.client.get(&listing_url).send().await?)
+		let retry_strategy = FixedInterval::from_millis(100).map(jitter).take(3);
+		let resp: Response = Retry::spawn(retry_strategy, || async {
+			let res = self.client.get(&listing_url).send().await?;
+			Ok::<Response, Error>(res)
 		})
 		.await
 		.with_context(|| {
@@ -117,8 +129,10 @@ impl Repository {
 
 	async fn download_image(&self, config: &Configuration, meta: &DownloadMeta) -> Result<()> {
 		println!("[{}] downloading image {}", meta.subreddit_name, meta.url);
-		let response = retry(ExponentialBackoff::default(), || async {
-			Ok(self.client.get(&meta.url).send().await?)
+		let retry_strategy = FixedInterval::from_millis(100).map(jitter).take(3);
+		let response = Retry::spawn(retry_strategy, || async {
+			let res = self.client.get(&meta.url).send().await?;
+			Ok::<Response, Error>(res)
 		})
 		.await
 		.with_context(|| {
