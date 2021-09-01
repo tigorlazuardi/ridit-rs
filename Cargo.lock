@@ -53,20 +53,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "cdb031dd78e28731d87d56cc8ffef4a8f36ca26c38fe2de700543e627f8a464a"
 
 [[package]]
-name = "backoff"
-version = "0.3.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "9fe17f59a06fe8b87a6fc8bf53bb70b3aba76d7685f432487a68cd5552853625"
-dependencies = [
- "futures-core",
- "getrandom",
- "instant",
- "pin-project",
- "rand",
- "tokio",
-]
-
-[[package]]
 name = "backtrace"
 version = "0.3.61"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -892,23 +878,12 @@ dependencies = [
 ]
 
 [[package]]
-name = "retry_fn"
-version = "0.2.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "bab523f7ddb615a71a684cda6367ac44ff21138567b1dc5692a5c08f7b794a77"
-dependencies = [
- "tokio",
-]
-
-[[package]]
 name = "ridit"
 version = "0.1.0"
 dependencies = [
  "anyhow",
- "backoff",
  "directories",
  "reqwest",
- "retry_fn",
  "serde",
  "structopt",
  "tokio",

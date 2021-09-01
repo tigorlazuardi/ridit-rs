@@ -7,11 +7,7 @@ edition = '2018'
 structopt = '0.3'
 directories = '3.0'
 toml = '0.5'
-tokio-retry = "0.3"
-
-[dependencies.retry_fn]
-version = '0.2'
-features = ['tokio-runtime']
+tokio-retry = '0.3'
 
 [dependencies.anyhow]
 version = '1'
@@ -23,10 +19,6 @@ features = [
 [dependencies.reqwest]
 version = '0.11'
 features = ['json']
-
-[dependencies.backoff]
-version = '0.3'
-features = ['tokio']
 
 [dependencies.tokio]
 version = '1.10'
