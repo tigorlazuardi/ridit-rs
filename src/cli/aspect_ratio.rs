@@ -13,10 +13,10 @@ pub enum AspectRatio {
 	Range { input: f32 },
 	/// Set aspect ratio height
 	#[structopt(visible_alias = "h")]
-	Height { input: u32 },
+	Height { input: usize },
 	/// Set aspect ratio width
 	#[structopt(visible_alias = "w")]
-	Width { input: u32 },
+	Width { input: usize },
 }
 
 impl AspectRatio {
@@ -34,9 +34,9 @@ impl AspectRatio {
 
 	fn disable(&self, profile: &str) {}
 
-	fn height(&self, input: u32, profile: &str) {}
+	fn height(&self, input: usize, profile: &str) {}
 
-	fn width(&self, input: u32, profile: &str) {}
+	fn width(&self, input: usize, profile: &str) {}
 
 	fn range(&self, input: f32, profile: &str) {}
 }

@@ -30,8 +30,8 @@ impl Default for Configuration {
 #[derive(Debug, Deserialize, Clone, Copy, Serialize)]
 pub struct AspectRatio {
 	pub enable: bool,
-	pub height: u32,
-	pub width: u32,
+	pub height: usize,
+	pub width: usize,
 	pub range: f32,
 }
 
@@ -49,8 +49,8 @@ impl Default for AspectRatio {
 #[derive(Debug, Deserialize, Clone, Copy, Serialize)]
 pub struct MinimumSize {
 	pub enable: bool,
-	pub height: u32,
-	pub width: u32,
+	pub height: usize,
+	pub width: usize,
 }
 
 impl Default for MinimumSize {
@@ -66,7 +66,7 @@ impl Default for MinimumSize {
 #[derive(Deserialize, Debug, Clone, Serialize)]
 pub struct Download {
 	pub path: PathBuf,
-	pub connect_timeout: u32,
+	pub connect_timeout: usize,
 }
 
 impl Default for Download {

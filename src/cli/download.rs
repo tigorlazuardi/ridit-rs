@@ -11,7 +11,7 @@ pub enum Download {
 	},
 	/// Sets connect timeout (in seconds)
 	#[structopt(visible_aliases = &["ct", "connect"])]
-	ConnectTimeout { input: u32 },
+	ConnectTimeout { input: usize },
 	/// Prints download configuration
 	#[structopt(visible_aliases = &["ls", "list"])]
 	Print(PrintOpts),
@@ -34,7 +34,7 @@ impl Download {
 
 	fn path<P: AsRef<Path>>(path: P, profile: &str) {}
 
-	fn connect_timeout(input: u32) {}
+	fn connect_timeout(input: usize) {}
 
 	fn print(opts: &PrintOpts, profile: &str) {}
 }
