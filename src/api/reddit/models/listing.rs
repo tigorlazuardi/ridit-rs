@@ -6,7 +6,6 @@ use super::download_meta::DownloadMeta;
 
 #[derive(Deserialize)]
 pub struct Listing {
-	// pub kind: String,
 	pub data: Data,
 }
 
@@ -25,21 +24,22 @@ impl Listing {
 				continue;
 			}
 
-			let image_size = match data.get_image_size() {
-				Some(s) => s,
-				None => continue,
-			};
-
 			let filename = match Listing::get_filename_from_url(&data.url) {
 				Some(name) => name,
 				None => continue,
 			};
 
+			let (width, height) = match data.get_image_size() {
+				Some(s) => s,
+				// return (1, 1) to prevent panic divide by 0
+				None => (1, 1),
+			};
+
 			let meta = DownloadMeta {
 				subreddit_name: data.subreddit,
 				post_link: format!("https://reddit.com{}", data.permalink),
-				image_width: image_size.0,
-				image_height: image_size.1,
+				image_width: width,
+				image_height: height,
 				filename,
 				url: data.url,
 				nsfw: data.over_18,
@@ -105,7 +105,7 @@ pub struct ChildrenData {
 
 impl ChildrenData {
 	/// Returned tuple looks like this `(width, height)`
-	pub fn get_image_size(&self) -> Option<(u32, u32)> {
+	pub fn get_image_size(&self) -> Option<(usize, usize)> {
 		if let Some(preview) = &self.preview {
 			return preview.get_image_size();
 		}
@@ -133,7 +133,7 @@ pub struct Preview {
 
 impl Preview {
 	/// tuple looks like this `(width, height)`
-	pub fn get_image_size(&self) -> Option<(u32, u32)> {
+	pub fn get_image_size(&self) -> Option<(usize, usize)> {
 		if let Some(img) = self.images.get(0) {
 			let source = &img.source;
 			return Some((source.width, source.height));
@@ -152,8 +152,8 @@ pub struct Image {
 #[derive(Deserialize)]
 pub struct Source {
 	pub url: String,
-	pub width: u32,
-	pub height: u32,
+	pub width: usize,
+	pub height: usize,
 }
 
 #[derive(Deserialize)]

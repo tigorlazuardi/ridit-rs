@@ -1,10 +1,12 @@
 use std::{path::PathBuf, sync::Arc, time::Duration};
 
 use anyhow::{Context, Error, Result};
-use reqwest::{Client, Response};
+use imagesize::blob_size;
+use reqwest::{header::RANGE, Client, Response};
 use tokio::{
 	fs::{self, File},
 	io::AsyncWriteExt,
+	sync::Semaphore,
 };
 use tokio_retry::{
 	strategy::{jitter, FixedInterval},
@@ -27,6 +29,7 @@ use crate::{
 pub struct Repository {
 	client: Arc<Client>,
 	config: Arc<Config>,
+	semaphore: Arc<Semaphore>,
 }
 
 static APP_USER_AGENT: &str = concat!(env!("CARGO_PKG_NAME"), "/", env!("CARGO_PKG_VERSION"));
@@ -39,9 +42,12 @@ impl Repository {
 			.build()
 			.context("failed to create request client")
 			.unwrap();
+
+		let semaphore = Arc::new(Semaphore::new(6));
 		Self {
 			client: Arc::new(client),
 			config,
+			semaphore,
 		}
 	}
 
@@ -70,20 +76,28 @@ impl Repository {
 		subreddit: Subreddit,
 	) -> Result<()> {
 		let downloads = self.download_listing(&*config, name, subreddit).await?;
-		self.download_images(config, downloads).await;
+		self.download_images(config, downloads, subreddit).await;
 		Ok(())
 	}
 
-	async fn download_images(&self, config: Arc<Configuration>, downloads: Vec<DownloadMeta>) {
+	async fn download_images(
+		&self,
+		config: Arc<Configuration>,
+		downloads: Vec<DownloadMeta>,
+		subreddit: Subreddit,
+	) {
 		let mut handlers = Vec::new();
-		for meta in downloads.into_iter() {
+		for mut meta in downloads.into_iter() {
 			if Repository::file_exists(&*config, &meta).await {
 				continue;
 			}
 			let this = self.clone();
 			let config = config.clone();
+			let sem = self.semaphore.clone();
 			let handle = tokio::spawn(async move {
-				this.download_image(&*config, &meta).await?;
+				// release semaphore lock on end of scope
+				let _x = sem.acquire().await.unwrap();
+				this.download_image(&*config, &mut meta, subreddit).await?;
 				Ok::<(), Error>(())
 			});
 			handlers.push(handle);
@@ -113,7 +127,7 @@ impl Repository {
 		.await
 		.with_context(|| {
 			format!(
-				"failed to open connecttion to download listing from: {}",
+				"failed to open connection to download listing from: {}",
 				listing_url
 			)
 		})?;
@@ -127,7 +141,19 @@ impl Repository {
 		Ok(result.into_download_metas(config))
 	}
 
-	async fn download_image(&self, config: &Configuration, meta: &DownloadMeta) -> Result<()> {
+	async fn download_image(
+		&self,
+		config: &Configuration,
+		meta: &mut DownloadMeta,
+		subreddit: Subreddit,
+	) -> Result<()> {
+		if subreddit.download_first {
+			self.poke_image_size(meta).await?;
+			if !meta.passed_checks(config) {
+				return Ok(());
+			}
+		}
+
 		println!("[{}] downloading image {}", meta.subreddit_name, meta.url);
 		let retry_strategy = FixedInterval::from_millis(100).map(jitter).take(3);
 		let response = Retry::spawn(retry_strategy, || async {
@@ -142,15 +168,7 @@ impl Repository {
 			)
 		})?;
 
-		{
-			let download_dir = Repository::download_dir(config, meta);
-			fs::create_dir_all(&download_dir).await.with_context(|| {
-				format!(
-					"failed to create download directory on: {}",
-					download_dir.display()
-				)
-			})?;
-		}
+		Repository::ensure_download_dir(config, meta).await?;
 
 		let temp_file = Repository::store_to_temp(response, meta).await?;
 		let download_location = Repository::download_location(config, meta);
@@ -164,6 +182,55 @@ impl Repository {
 				)
 			})?;
 
+		Ok(())
+	}
+
+	async fn ensure_download_dir(config: &Configuration, meta: &DownloadMeta) -> Result<()> {
+		let download_dir = Repository::download_dir(config, meta);
+		fs::create_dir_all(&download_dir).await.with_context(|| {
+			format!(
+				"failed to create download directory on: {}",
+				download_dir.display()
+			)
+		})?;
+
+		Ok(())
+	}
+
+	/// Checks for image size by downloading small image size first, then updates the given
+	/// DownloadMeta information on success. Note this does not download the whole file.
+	async fn poke_image_size(&self, meta: &mut DownloadMeta) -> Result<()> {
+		const LIMIT: usize = 0x200;
+		let retry_strategy = FixedInterval::from_millis(100).map(jitter).take(3);
+		let mut resp = Retry::spawn(retry_strategy, || async {
+			let res = self
+				.client
+				.get(&meta.url)
+				.header(RANGE, LIMIT)
+				.send()
+				.await?;
+			Ok::<Response, Error>(res)
+		})
+		.await
+		.with_context(|| {
+			format!(
+				"failed to partial download an image to get image size from: {}",
+				meta.url
+			)
+		})?;
+		let mut data: Vec<u8> = Vec::new();
+		while let Some(chunk) = resp.chunk().await? {
+			data.append(&mut chunk.to_vec());
+			// Just in case the server does not respect Range header
+			if data.len() >= LIMIT {
+				break;
+			}
+		}
+		let size = blob_size(&data)
+			.with_context(|| format!("error getting dimension from: {}", meta.url))?;
+
+		meta.image_height = size.height;
+		meta.image_width = size.width;
 		Ok(())
 	}
 
