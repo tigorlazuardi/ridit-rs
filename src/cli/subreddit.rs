@@ -5,7 +5,7 @@ use crate::api::config::{
 	config::{modify_config_profile, read_config},
 	configuration::Sort,
 };
-use anyhow::{Context, Result};
+use anyhow::{bail, Context, Result};
 
 use crate::api::config::configuration::Subreddit as SubredditConf;
 
@@ -36,7 +36,10 @@ impl Subreddit {
 	}
 
 	async fn add_subreddit(add: &AddSubreddit, profile: &str) -> Result<()> {
-		Ok(modify_config_profile(profile, |cfg| {
+		if add.input.len() < 1 {
+			bail!("no new subreddits specified")
+		}
+		modify_config_profile(profile, |cfg| {
 			let mut conf = SubredditConf::default();
 			conf.nsfw = !add.no_nsfw;
 			conf.download_first = add.download_first;
@@ -46,7 +49,9 @@ impl Subreddit {
 			}
 			Ok(())
 		})
-		.await?)
+		.await?;
+		println!("added subreddits: {:?}", add.input);
+		Ok(())
 	}
 
 	async fn remove_subreddit(remove: &InputOnly, profile: &str) -> Result<()> {
@@ -101,7 +106,8 @@ pub struct AddSubreddit {
 	#[structopt(short, long)]
 	download_first: bool,
 
-	#[structopt(short, long)]
+	/// Sets the sort method. defaults to `new`
+	#[structopt(short, long, default_value = "new")]
 	sort: Sort,
 }
 
@@ -113,7 +119,7 @@ pub struct InputOnly {
 #[derive(Debug, StructOpt, Clone)]
 pub struct ListOptions {
 	/// Set output format. supported value: json, toml
-	#[structopt(short, long)]
+	#[structopt(short, long, default_value = "toml")]
 	out_format: OutFormat,
 }
 
