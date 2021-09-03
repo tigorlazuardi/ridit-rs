@@ -17,6 +17,7 @@ pub static CONFIG_FILENAME: &str = "ridit.toml";
 pub struct Config {
 	/// Profile to set configurations to
 	pub active: String,
+	pub timeout: u32,
 	pub settings: HashMap<String, Configuration>,
 }
 
@@ -40,6 +41,7 @@ impl Default for Config {
 		m.insert("main".to_string(), Configuration::default());
 		Config {
 			active: "main".to_string(),
+			timeout: 10,
 			settings: m,
 		}
 	}

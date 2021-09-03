@@ -69,7 +69,6 @@ impl Default for MinimumSize {
 #[derive(Deserialize, Debug, Clone, Serialize)]
 pub struct Download {
 	pub path: PathBuf,
-	pub connect_timeout: usize,
 }
 
 impl Default for Download {
@@ -81,7 +80,6 @@ impl Default for Download {
 			.to_path_buf();
 		Download {
 			path: dir.join("ridit"),
-			connect_timeout: 10,
 		}
 	}
 }

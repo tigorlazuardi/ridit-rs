@@ -38,7 +38,7 @@ impl Repository {
 	pub fn new(config: Arc<Config>) -> Self {
 		let client = reqwest::Client::builder()
 			.user_agent(APP_USER_AGENT)
-			.connect_timeout(Duration::from_secs(10))
+			.connect_timeout(Duration::from_secs(config.timeout.into()))
 			.build()
 			.context("failed to create request client")
 			.unwrap();
