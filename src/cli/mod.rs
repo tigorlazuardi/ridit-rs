@@ -14,8 +14,6 @@ use crate::api::config::config::read_config;
 #[structopt(name = "ridit", about = "Reddit image downloader written in rust", version = crate_version!(), author = crate_authors!())]
 pub struct Opt {
 	/// Profile to use
-	#[structopt(short, long, default_value = "main")]
-	profile: String,
 	#[structopt(subcommand)]
 	subcmd: SubCommand,
 }
@@ -24,9 +22,9 @@ impl Opt {
 	pub async fn execute(&self) -> Result<()> {
 		let config = read_config().await?;
 		match &self.subcmd {
-			SubCommand::AspectRatio(aspect) => aspect.handle(&self.profile),
-			SubCommand::Subreddit(sub) => sub.handle(&self.profile),
-			SubCommand::Download(dl) => dl.handle(&self.profile),
+			SubCommand::AspectRatio(aspect) => aspect.handle(&config.active).await?,
+			SubCommand::Subreddit(sub) => sub.handle(&config.active),
+			SubCommand::Download(dl) => dl.handle(&config.active),
 			&SubCommand::Start => {}
 		}
 		Ok(())
