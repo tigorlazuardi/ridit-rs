@@ -58,9 +58,17 @@ fn filename() -> PathBuf {
 
 pub async fn read_config() -> Result<Config> {
 	let filename = filename();
+	if !config_exist().await {
+		println!(
+			"file config does not exist. creating a new config on {}",
+			project_dir().config_dir().join(CONFIG_FILENAME).display()
+		);
+		create_config_dir().await;
+		write_config(&Config::default()).await?;
+	}
 	let content = fs::read_to_string(&filename)
 		.await
-		.context("config file does not exist in path or unreadable")?;
+		.with_context(|| format!("cannot find configuration file in: {}", filename.display()))?;
 
 	let config: Config =
 		toml::from_str(&content).context("bad configuration. failed to parse config file")?;
@@ -70,9 +78,12 @@ pub async fn read_config() -> Result<Config> {
 pub async fn write_config(c: &Config) -> Result<()> {
 	let filename = filename();
 	let buf = toml::to_string_pretty(c)?;
-	fs::write(&filename, &buf)
-		.await
-		.context("failed to write configuration to config directory")?;
+	fs::write(&filename, &buf).await.with_context(|| {
+		format!(
+			"failed to write configuration to config directory: {}",
+			filename.display(),
+		)
+	})?;
 	Ok(())
 }
 
@@ -85,14 +96,6 @@ pub async fn modify_config<F>(mut f: F) -> Result<()>
 where
 	F: FnMut(&mut Config) -> Result<()>,
 {
-	if !config_exist().await {
-		write_config(&Config::default()).await?;
-		println!(
-			"file config does not exist. creating a new config on {}",
-			project_dir().config_dir().join(CONFIG_FILENAME).display()
-		);
-		return Ok(());
-	}
 	let mut config = read_config().await?;
 	f(&mut config)?;
 	write_config(&config).await?;
