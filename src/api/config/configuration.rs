@@ -1,4 +1,7 @@
-use std::{collections::HashMap, default::Default, fmt::Display, path::PathBuf};
+use std::{
+	collections::HashMap, convert::Infallible, default::Default, fmt::Display, path::PathBuf,
+	str::FromStr,
+};
 
 use directories::UserDirs;
 use serde::{Deserialize, Serialize};
@@ -95,7 +98,7 @@ impl Default for Subreddit {
 		Subreddit {
 			nsfw: true,
 			download_first: false,
-			sort: Sort::New,
+			sort: Sort::default(),
 		}
 	}
 }
@@ -125,5 +128,19 @@ impl Display for Sort {
 			Self::Controversial => write!(f, "controversial"),
 			Self::Top => write!(f, "top"),
 		}
+	}
+}
+
+impl FromStr for Sort {
+	type Err = Infallible;
+
+	fn from_str(s: &str) -> Result<Self, Self::Err> {
+		Ok(match s.to_lowercase().as_str() {
+			"hot" => Self::Hot,
+			"rising" => Self::Rising,
+			"controversial" => Self::Controversial,
+			"top" => Self::Top,
+			_ => Self::New,
+		})
 	}
 }

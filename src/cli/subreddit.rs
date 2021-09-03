@@ -1,7 +1,10 @@
 use std::{convert::Infallible, fmt::Display, str::FromStr};
 use structopt::StructOpt;
 
-use crate::api::config::config::{modify_config_profile, read_config};
+use crate::api::config::{
+	config::{modify_config_profile, read_config},
+	configuration::Sort,
+};
 use anyhow::{Context, Result};
 
 use crate::api::config::configuration::Subreddit as SubredditConf;
@@ -36,6 +39,8 @@ impl Subreddit {
 		Ok(modify_config_profile(profile, |cfg| {
 			let mut conf = SubredditConf::default();
 			conf.nsfw = !add.no_nsfw;
+			conf.download_first = add.download_first;
+			conf.sort = add.sort;
 			for name in &add.input {
 				cfg.subreddits.insert(name.to_owned(), conf);
 			}
@@ -95,6 +100,9 @@ pub struct AddSubreddit {
 	/// settings instead of adding double entry.
 	#[structopt(short, long)]
 	download_first: bool,
+
+	#[structopt(short, long)]
+	sort: Sort,
 }
 
 #[derive(Debug, StructOpt, Clone)]
