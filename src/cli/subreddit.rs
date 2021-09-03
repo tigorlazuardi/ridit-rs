@@ -1,4 +1,10 @@
+use std::{convert::Infallible, fmt::Display, str::FromStr};
 use structopt::StructOpt;
+
+use crate::api::config::config::{modify_config_profile, read_config};
+use anyhow::{Context, Result};
+
+use crate::api::config::configuration::Subreddit as SubredditConf;
 
 #[derive(Debug, StructOpt, Clone)]
 pub enum Subreddit {
@@ -18,19 +24,55 @@ pub enum Subreddit {
 }
 
 impl Subreddit {
-	pub fn handle(&self, profile: &str) {
-		match &self {
-			Self::Add(add) => Self::add_subreddit(add, profile),
-			Self::Remove(rem) => Self::remove_subreddit(rem, profile),
-			Self::List(opts) => Self::list(opts, profile),
-		}
+	pub async fn handle(&self, profile: &str) -> Result<()> {
+		Ok(match &self {
+			Self::Add(add) => Self::add_subreddit(add, profile).await?,
+			Self::Remove(rem) => Self::remove_subreddit(rem, profile).await?,
+			Self::List(opts) => Self::list(opts, profile).await?,
+		})
 	}
 
-	fn add_subreddit(add: &AddSubreddit, profile: &str) {}
+	async fn add_subreddit(add: &AddSubreddit, profile: &str) -> Result<()> {
+		Ok(modify_config_profile(profile, |cfg| {
+			let mut conf = SubredditConf::default();
+			conf.nsfw = !add.no_nsfw;
+			for name in &add.input {
+				cfg.subreddits.insert(name.to_owned(), conf);
+			}
+			Ok(())
+		})
+		.await?)
+	}
 
-	fn remove_subreddit(remove: &InputOnly, profile: &str) {}
+	async fn remove_subreddit(remove: &InputOnly, profile: &str) -> Result<()> {
+		Ok(modify_config_profile(profile, |cfg| {
+			for name in &remove.input {
+				cfg.subreddits.remove(name);
+			}
+			Ok(())
+		})
+		.await?)
+	}
 
-	fn list(opts: &ListOptions, profile: &str) {}
+	async fn list(opts: &ListOptions, profile: &str) -> Result<()> {
+		let config = read_config().await?;
+		let profile_config = config.get(profile).unwrap();
+
+		match opts.out_format {
+			OutFormat::JSON => {
+				let val = serde_json::to_string_pretty(&profile_config.subreddits)
+					.context("failed to serialize subreddits to json format")?;
+				println!("{}", val);
+			}
+			OutFormat::TOML => {
+				let val = toml::to_string_pretty(&profile_config.subreddits)
+					.context("failed to serialize subreddits to toml format")?;
+				println!("{}", val);
+			}
+		}
+
+		Ok(())
+	}
 }
 
 #[derive(Debug, StructOpt, Clone)]
@@ -63,6 +105,39 @@ pub struct InputOnly {
 #[derive(Debug, StructOpt, Clone)]
 pub struct ListOptions {
 	/// Set output format. supported value: json, toml
-	#[structopt(short, long, default_value = "toml")]
-	out_format: String,
+	#[structopt(short, long)]
+	out_format: OutFormat,
+}
+
+#[derive(Clone, Copy, Debug)]
+pub enum OutFormat {
+	JSON,
+	TOML,
+}
+
+impl Default for OutFormat {
+	fn default() -> Self {
+		Self::TOML
+	}
+}
+
+impl Display for OutFormat {
+	fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+		match self {
+			Self::JSON => write!(f, "json"),
+			Self::TOML => write!(f, "toml"),
+		}
+	}
+}
+
+impl FromStr for OutFormat {
+	type Err = Infallible;
+
+	fn from_str(s: &str) -> std::result::Result<Self, Self::Err> {
+		match s.to_lowercase().as_str() {
+			"json" => Ok(Self::JSON),
+			"toml" => Ok(Self::TOML),
+			_ => Ok(Self::TOML),
+		}
+	}
 }

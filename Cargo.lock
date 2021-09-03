@@ -892,6 +892,7 @@ dependencies = [
  "imagesize",
  "reqwest",
  "serde",
+ "serde_json",
  "structopt",
  "tokio",
  "tokio-retry",

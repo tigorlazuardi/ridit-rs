@@ -23,7 +23,7 @@ impl Opt {
 		let config = read_config().await?;
 		match &self.subcmd {
 			SubCommand::AspectRatio(aspect) => aspect.handle(&config.active).await?,
-			SubCommand::Subreddit(sub) => sub.handle(&config.active),
+			SubCommand::Subreddit(sub) => sub.handle(&config.active).await?,
 			SubCommand::Download(dl) => dl.handle(&config.active),
 			&SubCommand::Start => {}
 		}
