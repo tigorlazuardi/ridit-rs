@@ -2,6 +2,28 @@
 ## [Unreleased]
 
 
+<a name="v0.2.0"></a>
+## [v0.2.0] - 2021-09-03
+### Feature
+- **cli:** removed daemon subcmd and edited help text
+- **cli:** added aspect ratio implementation commands
+- **config:** moved from u32 to usize
+- **config:** removed active_daemon config
+- **config:** added write default if config does not exist handling
+- **config:** added error context to project dir
+- **listing:** moved check handler to meta so it can be handled elsewhere as well
+- **reddit:** removed backoff and retry_fn from dependency
+- **reddit:** get listing now uses unbounded channel
+- **reddit:** update repository
+- **reddit:** changed retry to tokio_retry
+- **reddit:** added download images
+- **reddit:** reddit now poke image size first to get image sizes if `download_first` is set
+- **sort:** implemented display
+
+### Fix
+- **reddit:** create_dir_all runs first before any storing is made
+
+
 <a name="v0.1.4"></a>
 ## [v0.1.4] - 2021-08-23
 ### Doc
@@ -90,7 +112,8 @@
 - **cli:** moved functions to method
 
 
-[Unreleased]: https://github.com/tigorlazuardi/ridit-rs/compare/v0.1.4...HEAD
+[Unreleased]: https://github.com/tigorlazuardi/ridit-rs/compare/v0.2.0...HEAD
+[v0.2.0]: https://github.com/tigorlazuardi/ridit-rs/compare/v0.1.4...v0.2.0
 [v0.1.4]: https://github.com/tigorlazuardi/ridit-rs/compare/v0.1.3...v0.1.4
 [v0.1.3]: https://github.com/tigorlazuardi/ridit-rs/compare/v0.1.2...v0.1.3
 [v0.1.2]: https://github.com/tigorlazuardi/ridit-rs/compare/v0.1.1...v0.1.2
