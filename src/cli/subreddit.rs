@@ -1,9 +1,12 @@
 use std::{convert::Infallible, fmt::Display, str::FromStr};
 use structopt::StructOpt;
 
-use crate::api::config::{
-	config::{modify_config_profile, read_config},
-	configuration::Sort,
+use crate::api::{
+	config::{
+		config::{modify_config_profile, read_config, write_config, Config},
+		configuration::Sort,
+	},
+	reddit::repository::Repository,
 };
 use anyhow::{bail, Context, Result};
 
@@ -27,47 +30,58 @@ pub enum Subreddit {
 }
 
 impl Subreddit {
-	pub async fn handle(&self, profile: &str) -> Result<()> {
+	pub async fn handle(&self, config: &mut Config) -> Result<()> {
 		Ok(match &self {
-			Self::Add(add) => Self::add_subreddit(add, profile).await?,
-			Self::Remove(rem) => Self::remove_subreddit(rem, profile).await?,
-			Self::List(opts) => Self::list(opts, profile).await?,
+			Self::Add(add) => Self::add_subreddit(add, config).await?,
+			Self::Remove(rem) => Self::remove_subreddit(rem, config).await?,
+			Self::List(opts) => Self::list(opts, config).await?,
 		})
 	}
 
-	async fn add_subreddit(add: &AddSubreddit, profile: &str) -> Result<()> {
+	async fn add_subreddit(add: &AddSubreddit, config: &mut Config) -> Result<()> {
+		let cfg = config.get_mut_configuration()?;
 		if add.input.len() < 1 {
 			bail!("no new subreddits specified")
 		}
-		modify_config_profile(profile, |cfg| {
-			let mut conf = SubredditConf::default();
-			conf.nsfw = !add.no_nsfw;
-			conf.download_first = add.download_first;
-			conf.sort = add.sort;
-			for name in &add.input {
-				cfg.subreddits.insert(name.to_owned(), conf);
+		let mut result = vec![];
+		let mut conf = SubredditConf::default();
+		conf.nsfw = !add.no_nsfw;
+		conf.download_first = add.download_first;
+		conf.sort = add.sort;
+		for name in &add.input {
+			let name = name.to_owned();
+			if let Some(_) = cfg.subreddits.get(&name) {
+				continue;
 			}
-			Ok(())
-		})
-		.await?;
-		println!("added subreddits: {:?}", add.input);
+			if !Repository::subreddit_exist(&name).await? {
+				continue;
+			}
+			cfg.subreddits.insert(name.to_owned(), conf);
+			result.push(name.to_owned());
+		}
+		write_config(config).await?;
+		println!("added subreddits: {:?}", result);
 		Ok(())
 	}
 
-	async fn remove_subreddit(remove: &InputOnly, profile: &str) -> Result<()> {
-		Ok(modify_config_profile(profile, |cfg| {
-			for name in &remove.input {
-				cfg.subreddits.remove(name);
+	async fn remove_subreddit(remove: &InputOnly, config: &mut Config) -> Result<()> {
+		let cfg = config.get_mut_configuration()?;
+		if remove.input.len() < 1 {
+			bail!("no subreddits to remove")
+		}
+		let mut result = vec![];
+		for name in &remove.input {
+			match cfg.subreddits.remove(name) {
+				Some(_) => result.push(name.to_owned()),
+				None => println!("subreddit {} does not exist in configuration", name),
 			}
-			Ok(())
-		})
-		.await?)
+		}
+		println!("removed subreddits: {:?}", result);
+		Ok(())
 	}
 
-	async fn list(opts: &ListOptions, profile: &str) -> Result<()> {
-		let config = read_config().await?;
-		let profile_config = config.get(profile).unwrap();
-
+	async fn list(opts: &ListOptions, config: &Config) -> Result<()> {
+		let profile_config = config.get_configuration()?;
 		match opts.out_format {
 			OutFormat::JSON => {
 				let val = serde_json::to_string_pretty(&profile_config.subreddits)

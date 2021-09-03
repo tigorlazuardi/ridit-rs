@@ -1,5 +1,6 @@
 pub mod aspect_ratio;
 pub mod download;
+pub mod print;
 pub mod subreddit;
 
 use anyhow::Result;
@@ -25,7 +26,8 @@ impl Opt {
 			SubCommand::AspectRatio(aspect) => aspect.handle(&config.active).await?,
 			SubCommand::Subreddit(sub) => sub.handle(&config.active).await?,
 			SubCommand::Download(dl) => dl.handle(&config.active).await?,
-			&SubCommand::Start => {}
+			SubCommand::Start => {}
+			SubCommand::Print(p) => p.print(&config)?,
 		}
 		Ok(())
 	}
@@ -81,4 +83,6 @@ pub enum SubCommand {
 	Download(download::Download),
 	/// Start the server
 	Start,
+	/// Print whole configuration
+	Print(print::Print),
 }

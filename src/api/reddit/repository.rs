@@ -262,4 +262,23 @@ impl Repository {
 
 		Ok(file_path)
 	}
+
+	/// Checks to reddit if subreddit exists
+	pub async fn subreddit_exist(subreddit: &str) -> Result<bool> {
+		let url = format!("https://reddit.com/r/{}.json", subreddit);
+		let retry_strategy = FixedInterval::from_millis(100).map(jitter).take(3);
+		let resp: Response = Retry::spawn(retry_strategy, || async {
+			let res = reqwest::get(&url).await?;
+			Ok::<Response, Error>(res)
+		})
+		.await
+		.with_context(|| format!("failed to check subreddit {}", subreddit))?;
+
+		let listing: Listing = resp
+			.json()
+			.await
+			.with_context(|| format!("failed to deserialize json body from: {}", url))?;
+
+		Ok(listing.data.children.len() > 0)
+	}
 }

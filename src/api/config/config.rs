@@ -21,6 +21,20 @@ pub struct Config {
 	pub settings: HashMap<String, Configuration>,
 }
 
+impl Config {
+	pub fn get_mut_configuration(&self) -> Result<&mut Configuration> {
+		Ok(self
+			.get_mut(&self.active)
+			.with_context(|| format!("profile {} does not exist!", self.active))?)
+	}
+
+	pub fn get_configuration(&self) -> Result<&Configuration> {
+		Ok(self
+			.get(&self.active)
+			.with_context(|| format!("profile {} does not exist!", self.active))?)
+	}
+}
+
 impl Deref for Config {
 	type Target = HashMap<String, Configuration>;
 
