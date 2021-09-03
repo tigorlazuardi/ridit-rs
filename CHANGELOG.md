@@ -2,6 +2,20 @@
 ## [Unreleased]
 
 
+<a name="v0.2.1"></a>
+## [v0.2.1] - 2021-09-03
+### Feature
+- **cli:** more detailed reason for error to write configuration
+- **cli:** support for sort in adding subreddit
+- **cli:** added subreddit cli implementations
+- **config:** download timeout moved to top level
+- **pkg:** shorten on error definition
+- **subreddit:** guard for 0 subreddit and print added subreddits
+
+### Fix
+- **cli:** subcommand aspec handle now uses await
+
+
 <a name="v0.2.0"></a>
 ## [v0.2.0] - 2021-09-03
 ### Feature
@@ -112,7 +126,8 @@
 - **cli:** moved functions to method
 
 
-[Unreleased]: https://github.com/tigorlazuardi/ridit-rs/compare/v0.2.0...HEAD
+[Unreleased]: https://github.com/tigorlazuardi/ridit-rs/compare/v0.2.1...HEAD
+[v0.2.1]: https://github.com/tigorlazuardi/ridit-rs/compare/v0.2.0...v0.2.1
 [v0.2.0]: https://github.com/tigorlazuardi/ridit-rs/compare/v0.1.4...v0.2.0
 [v0.1.4]: https://github.com/tigorlazuardi/ridit-rs/compare/v0.1.3...v0.1.4
 [v0.1.3]: https://github.com/tigorlazuardi/ridit-rs/compare/v0.1.2...v0.1.3
