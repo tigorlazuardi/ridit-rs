@@ -2,10 +2,13 @@ pub mod aspect_ratio;
 pub mod download;
 pub mod subreddit;
 
+use anyhow::Result;
 use structopt::{
 	clap::{crate_authors, crate_version},
 	StructOpt,
 };
+
+use crate::api::config::config::read_config;
 
 #[derive(Debug, StructOpt, Clone)]
 #[structopt(name = "ridit", about = "Reddit image downloader written in rust", version = crate_version!(), author = crate_authors!())]
@@ -18,13 +21,15 @@ pub struct Opt {
 }
 
 impl Opt {
-	pub fn execute(&self) {
+	pub async fn execute(&self) -> Result<()> {
+		let config = read_config().await?;
 		match &self.subcmd {
 			SubCommand::AspectRatio(aspect) => aspect.handle(&self.profile),
 			SubCommand::Subreddit(sub) => sub.handle(&self.profile),
 			SubCommand::Download(dl) => dl.handle(&self.profile),
 			&SubCommand::Start => {}
 		}
+		Ok(())
 	}
 }
 

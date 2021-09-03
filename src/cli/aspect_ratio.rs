@@ -1,4 +1,7 @@
+use anyhow::Result;
 use structopt::StructOpt;
+
+use crate::api::config::config::modify_config;
 
 #[derive(StructOpt, Debug, Clone, Copy)]
 pub enum AspectRatio {
@@ -20,23 +23,59 @@ pub enum AspectRatio {
 }
 
 impl AspectRatio {
-	pub fn handle(&self, profile: &str) {
+	pub async fn handle(&self, profile: &str) -> Result<()> {
 		match self {
-			Self::Enable => self.enable(profile),
-			Self::Disable => self.disable(profile),
-			&Self::Height { input } => self.height(input, profile),
-			&Self::Width { input } => self.width(input, profile),
-			&Self::Range { input } => self.range(input, profile),
-		}
+			Self::Enable => self.enable(profile).await?,
+			Self::Disable => self.disable(profile).await?,
+			&Self::Height { input } => self.height(input, profile).await?,
+			&Self::Width { input } => self.width(input, profile).await?,
+			&Self::Range { input } => self.range(input, profile).await?,
+		};
+		Ok(())
 	}
 
-	fn enable(&self, profile: &str) {}
+	async fn enable(&self, profile: &str) -> Result<()> {
+		Ok(modify_config(|cfg| {
+			let mut configuration = cfg.get_mut(profile).unwrap();
+			configuration.aspect_ratio.enable = true;
+			Ok(())
+		})
+		.await?)
+	}
 
-	fn disable(&self, profile: &str) {}
+	async fn disable(&self, profile: &str) -> Result<()> {
+		Ok(modify_config(|cfg| {
+			let mut configuration = cfg.get_mut(profile).unwrap();
+			configuration.aspect_ratio.enable = false;
+			Ok(())
+		})
+		.await?)
+	}
 
-	fn height(&self, input: usize, profile: &str) {}
+	async fn height(&self, input: usize, profile: &str) -> Result<()> {
+		Ok(modify_config(|cfg| {
+			let mut configuration = cfg.get_mut(profile).unwrap();
+			configuration.aspect_ratio.height = input;
+			Ok(())
+		})
+		.await?)
+	}
 
-	fn width(&self, input: usize, profile: &str) {}
+	async fn width(&self, input: usize, profile: &str) -> Result<()> {
+		Ok(modify_config(|cfg| {
+			let mut configuration = cfg.get_mut(profile).unwrap();
+			configuration.aspect_ratio.width = input;
+			Ok(())
+		})
+		.await?)
+	}
 
-	fn range(&self, input: f32, profile: &str) {}
+	async fn range(&self, input: f32, profile: &str) -> Result<()> {
+		Ok(modify_config(|cfg| {
+			let mut configuration = cfg.get_mut(profile).unwrap();
+			configuration.aspect_ratio.range = input;
+			Ok(())
+		})
+		.await?)
+	}
 }
