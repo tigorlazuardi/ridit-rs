@@ -67,10 +67,6 @@ pub enum SubCommand {
 	/// Set Aspect Ratio Height: `ridit aspect-ratio height 9`
 	///
 	/// Set Aspect Ratio Width: `ridit aspect-ratio width 16`
-	///
-	/// Set Aspect Ratio Width for profile: `ridit --profile=mobile aspect-ratio width 9`
-	///
-	/// Set Aspect Ratio Height for profile: `ridit --profile=mobile aspect-ratio height 16`
 	AspectRatio(aspect_ratio::AspectRatio),
 	/// Add or remove subreddit(s) from subscription.
 	///
@@ -83,6 +79,6 @@ pub enum SubCommand {
 	Download(download::Download),
 	/// Start the server
 	Start,
-	/// Print whole configuration
+	/// Print<'a>s whole configuration
 	Print(print::Print),
 }
