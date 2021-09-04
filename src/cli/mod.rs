@@ -23,7 +23,7 @@ impl Opt {
 	pub async fn execute(&self) -> Result<()> {
 		let mut config = read_config().await?;
 		match &self.subcmd {
-			SubCommand::AspectRatio(aspect) => aspect.handle(&config.active).await?,
+			SubCommand::AspectRatio(aspect) => aspect.handle(&mut config).await?,
 			SubCommand::Subreddit(sub) => sub.handle(&mut config).await?,
 			SubCommand::Download(dl) => dl.handle(&mut config).await?,
 			SubCommand::Start => {}
