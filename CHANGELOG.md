@@ -2,6 +2,21 @@
 ## [Unreleased]
 
 
+<a name="v0.3.0"></a>
+## [v0.3.0] - 2021-09-04
+### Doc
+- **cli:** removed profile specific configuration example for aspect-ratio
+
+### Feature
+- **cli:** mutable borrow fixes on config get mut
+- **cli:** added print cli
+
+### Refactor
+- **cli:** removed modify_config and it's derivative
+- **cli:** aspect ratio does not read config twice now
+- **cli:** removed unused imports
+
+
 <a name="v0.2.1"></a>
 ## [v0.2.1] - 2021-09-03
 ### Feature
@@ -126,7 +141,8 @@
 - **cli:** moved functions to method
 
 
-[Unreleased]: https://github.com/tigorlazuardi/ridit-rs/compare/v0.2.1...HEAD
+[Unreleased]: https://github.com/tigorlazuardi/ridit-rs/compare/v0.3.0...HEAD
+[v0.3.0]: https://github.com/tigorlazuardi/ridit-rs/compare/v0.2.1...v0.3.0
 [v0.2.1]: https://github.com/tigorlazuardi/ridit-rs/compare/v0.2.0...v0.2.1
 [v0.2.0]: https://github.com/tigorlazuardi/ridit-rs/compare/v0.1.4...v0.2.0
 [v0.1.4]: https://github.com/tigorlazuardi/ridit-rs/compare/v0.1.3...v0.1.4
