@@ -3,7 +3,7 @@ use structopt::StructOpt;
 
 use crate::api::{
 	config::{
-		config::{modify_config_profile, read_config, write_config, Config},
+		config::{write_config, Config},
 		configuration::Sort,
 	},
 	reddit::repository::Repository,

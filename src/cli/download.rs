@@ -1,10 +1,8 @@
-use anyhow::{Context, Result};
+use anyhow::Result;
 use std::path::{Path, PathBuf};
 use structopt::StructOpt;
 
-use crate::api::config::config::{
-	modify_config, modify_config_profile, read_config, write_config, Config,
-};
+use crate::api::config::config::{write_config, Config};
 
 use super::subreddit::OutFormat;
 
