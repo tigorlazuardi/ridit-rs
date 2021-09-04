@@ -2,7 +2,9 @@ use anyhow::{Context, Result};
 use std::path::{Path, PathBuf};
 use structopt::StructOpt;
 
-use crate::api::config::config::{modify_config, modify_config_profile, read_config};
+use crate::api::config::config::{
+	modify_config, modify_config_profile, read_config, write_config, Config,
+};
 
 use super::subreddit::OutFormat;
 
@@ -29,42 +31,40 @@ pub struct PrintOpts {
 }
 
 impl Download {
-	pub async fn handle(&self, profile: &str) -> Result<()> {
+	pub async fn handle(&self, config: &mut Config) -> Result<()> {
 		Ok(match &self {
-			Self::Path { input } => Download::path(input, profile).await?,
-			Self::ConnectTimeout { input } => Download::connect_timeout(*input, profile).await?,
-			Self::Print(p) => Download::print(p, profile).await?,
+			Self::Path { input } => Download::path(input, config).await?,
+			Self::ConnectTimeout { input } => Download::connect_timeout(*input, config).await?,
+			Self::Print(p) => Download::print(p, config).await?,
 		})
 	}
 
-	async fn path<P: AsRef<Path>>(path: P, profile: &str) -> Result<()> {
+	async fn path<P: AsRef<Path>>(path: P, config: &mut Config) -> Result<()> {
 		let p = path.as_ref().to_path_buf();
-		modify_config_profile(profile, |cfg| {
-			cfg.download.path = p.clone();
-			Ok(())
-		})
-		.await?;
+		let cfg = config.get_mut_configuration()?;
+		cfg.download.path = p.clone();
+		write_config(config).await?;
 		println!("download path is set to {}", p.display());
 		Ok(())
 	}
 
-	async fn connect_timeout(input: u32, profile: &str) -> Result<()> {
-		Ok(modify_config(|c| Ok(c.timeout = input)).await?)
+	async fn connect_timeout(input: u32, config: &mut Config) -> Result<()> {
+		config.timeout = input;
+		write_config(config).await?;
+		println!("timeout is set to {} seconds", input);
+		Ok(())
 	}
 
-	async fn print(opts: &PrintOpts, profile: &str) -> Result<()> {
-		let c = read_config().await?;
-		let cfg = c
-			.get(profile)
-			.with_context(|| format!(r#"profile "{}" does not exist in configuration"#, profile))?;
+	async fn print(opts: &PrintOpts, config: &Config) -> Result<()> {
+		let cfg = config.get_configuration()?;
 		match opts.out_format {
-			OutFormat::JSON => {
-				let val = serde_json::to_string_pretty(&cfg.download)?;
-				println!("{}", val)
-			}
 			OutFormat::TOML => {
 				let val = toml::to_string_pretty(&cfg.download)?;
-				println!("{}", val)
+				println!("{}", val);
+			}
+			OutFormat::JSON => {
+				let val = serde_json::to_string_pretty(&cfg.download)?;
+				println!("{}", val);
 			}
 		}
 		Ok(())

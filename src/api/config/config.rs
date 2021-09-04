@@ -22,10 +22,11 @@ pub struct Config {
 }
 
 impl Config {
-	pub fn get_mut_configuration(&self) -> Result<&mut Configuration> {
+	pub fn get_mut_configuration(&mut self) -> Result<&mut Configuration> {
+		let active = self.active.to_owned();
 		Ok(self
-			.get_mut(&self.active)
-			.with_context(|| format!("profile {} does not exist!", self.active))?)
+			.get_mut(&active)
+			.with_context(|| format!("profile {} does not exist!", active))?)
 	}
 
 	pub fn get_configuration(&self) -> Result<&Configuration> {
