@@ -104,43 +104,6 @@ pub async fn write_config(c: &Config) -> Result<()> {
 	Ok(())
 }
 
-/// Reads the whole config and set them as closure parameter. On closure ends, the config variable
-/// will be written to disk.
-///
-/// If returned closure contains Err value, it will short circuit and pass the Err value to the
-/// caller function.
-pub async fn modify_config<F>(mut f: F) -> Result<()>
-where
-	F: FnMut(&mut Config) -> Result<()>,
-{
-	let mut config = read_config().await?;
-	f(&mut config)?;
-	write_config(&config).await?;
-	Ok(())
-}
-
-/// Wrapper for `modify_config` function.
-///
-/// Get specific profile Configuration and write immediately after modification.
-/// Immediately short circuit and return error if profile does not exist.
-///
-/// On closure ends, the changes are written to disk.
-///
-/// If returned closure contains Err value, it will short circuit and pass the Err value to the
-/// caller function.
-pub async fn modify_config_profile<F>(profile: &str, mut f: F) -> Result<()>
-where
-	F: FnMut(&mut Configuration) -> Result<()>,
-{
-	modify_config(|c| {
-		let mut config = c.get_mut(profile).context("profile does not exist")?;
-		f(&mut config)?;
-		Ok(())
-	})
-	.await?;
-	Ok(())
-}
-
 pub async fn create_config_dir() {
 	let pd = project_dir();
 	let pd = pd.config_dir();
