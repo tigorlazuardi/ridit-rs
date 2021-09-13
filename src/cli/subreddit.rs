@@ -53,10 +53,18 @@ impl Subreddit {
 			if let Some(_) = cfg.subreddits.get(&name) {
 				continue;
 			}
-			if !Repository::subreddit_exist(&name).await? {
-				continue;
+			match Repository::subreddit_exist(&name).await {
+				Ok(b) if b => {}
+				Ok(_) => {
+					println!("subreddit '{}' seems to be empty", name);
+					continue;
+				}
+				Err(_) => {
+					println!("subreddit '{}' seems to be invalid or don't exist", name);
+					continue;
+				}
 			}
-			cfg.subreddits.insert(name.to_owned(), conf);
+			cfg.subreddits.insert(name.to_owned().to_lowercase(), conf);
 			result.push(name.to_owned());
 		}
 		write_config(config).await?;

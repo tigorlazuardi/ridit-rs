@@ -1,6 +1,7 @@
 pub mod aspect_ratio;
 pub mod download;
 pub mod print;
+pub mod start;
 pub mod subreddit;
 
 use anyhow::Result;
@@ -26,8 +27,9 @@ impl Opt {
 			SubCommand::AspectRatio(aspect) => aspect.handle(&mut config).await?,
 			SubCommand::Subreddit(sub) => sub.handle(&mut config).await?,
 			SubCommand::Download(dl) => dl.handle(&mut config).await?,
-			SubCommand::Start => {}
+			SubCommand::Start => start::start(&config).await?,
 			SubCommand::Print(p) => p.print(&config)?,
+			SubCommand::Server => {}
 		}
 		Ok(())
 	}
@@ -77,8 +79,12 @@ pub enum SubCommand {
 	Subreddit(subreddit::Subreddit),
 	/// Configures download settings.
 	Download(download::Download),
-	/// Start the server
+	/// Start the download manually
 	Start,
-	/// Print<'a>s whole configuration
+	/// Prints whole configuration
 	Print(print::Print),
+	/// Runs a downloading server.
+	///
+	/// Server will run for all profiles
+	Server,
 }

@@ -88,7 +88,7 @@ impl Repository {
 	) {
 		let mut handlers = Vec::new();
 		for mut meta in downloads.into_iter() {
-			if Repository::file_exists(&*config, &meta).await {
+			if Repository::file_exists(&self.config.active, &*config, &meta).await {
 				continue;
 			}
 			let this = self.clone();
@@ -168,10 +168,10 @@ impl Repository {
 			)
 		})?;
 
-		Repository::ensure_download_dir(config, meta).await?;
+		Repository::ensure_download_dir(&self.config.active, config, meta).await?;
 
-		let temp_file = Repository::store_to_temp(response, meta).await?;
-		let download_location = Repository::download_location(config, meta);
+		let temp_file = self.store_to_temp(response, meta).await?;
+		let download_location = Repository::download_location(&self.config.active, config, meta);
 
 		fs::copy(temp_file, &download_location)
 			.await
@@ -182,11 +182,21 @@ impl Repository {
 				)
 			})?;
 
+		println!(
+			"[{}] image downloaded to {}",
+			meta.subreddit_name,
+			download_location.display()
+		);
+
 		Ok(())
 	}
 
-	async fn ensure_download_dir(config: &Configuration, meta: &DownloadMeta) -> Result<()> {
-		let download_dir = Repository::download_dir(config, meta);
+	async fn ensure_download_dir(
+		profile: &str,
+		config: &Configuration,
+		meta: &DownloadMeta,
+	) -> Result<()> {
+		let download_dir = Repository::download_dir(profile, config, meta);
 		fs::create_dir_all(&download_dir).await.with_context(|| {
 			format!(
 				"failed to create download directory on: {}",
@@ -234,22 +244,31 @@ impl Repository {
 		Ok(())
 	}
 
-	fn download_dir(config: &Configuration, meta: &DownloadMeta) -> PathBuf {
-		config.download.path.join(&meta.subreddit_name)
+	fn download_dir(profile: &str, config: &Configuration, meta: &DownloadMeta) -> PathBuf {
+		config
+			.download
+			.path
+			.join(profile)
+			.join(&meta.subreddit_name)
 	}
 
-	fn download_location(config: &Configuration, meta: &DownloadMeta) -> PathBuf {
-		Repository::download_dir(config, meta).join(&meta.filename)
+	fn download_location(profile: &str, config: &Configuration, meta: &DownloadMeta) -> PathBuf {
+		Repository::download_dir(profile, config, meta).join(&meta.filename)
 	}
 
-	async fn file_exists(config: &Configuration, meta: &DownloadMeta) -> bool {
-		fs::metadata(Repository::download_location(config, meta))
+	async fn file_exists(profile: &str, config: &Configuration, meta: &DownloadMeta) -> bool {
+		fs::metadata(Repository::download_location(profile, config, meta))
 			.await
 			.is_ok()
 	}
 
-	async fn store_to_temp(mut resp: Response, meta: &DownloadMeta) -> Result<PathBuf> {
-		let file_path = std::env::temp_dir().join("ridit").join(&meta.filename);
+	async fn store_to_temp(&self, mut resp: Response, meta: &DownloadMeta) -> Result<PathBuf> {
+		let dir_path = std::env::temp_dir()
+			.join("ridit")
+			.join(&self.config.active)
+			.join(&meta.subreddit_name);
+		fs::create_dir_all(&dir_path).await?;
+		let file_path = dir_path.join(&meta.filename);
 		let mut file = File::create(&file_path)
 			.await
 			.context("cannot create file on tmp dir")?;
