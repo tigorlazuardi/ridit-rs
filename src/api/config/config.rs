@@ -5,25 +5,30 @@ use std::{
 };
 
 use anyhow::{Context, Result};
-use directories::ProjectDirs;
+use directories::{ProjectDirs, UserDirs};
 use serde::{Deserialize, Serialize};
 use tokio::fs;
 
-use super::configuration::Configuration;
+use super::configuration::{AspectRatio, Configuration, MinimumSize, Subreddit};
 
 pub static CONFIG_FILENAME: &str = "ridit.toml";
+
+pub type Subreddits = HashMap<String, Subreddit>;
+pub type Settings = HashMap<String, Configuration>;
 
 #[derive(Debug, Deserialize, Serialize, Clone)]
 pub struct Config {
 	/// Profile to set configurations to
-	pub active: String,
+	pub focused_profile: String,
 	pub timeout: u32,
-	pub settings: HashMap<String, Configuration>,
+	pub path: PathBuf,
+	pub settings: Settings,
+	pub subreddits: Subreddits,
 }
 
 impl Config {
 	pub fn get_mut_configuration(&mut self) -> Result<&mut Configuration> {
-		let active = self.active.to_owned();
+		let active = self.focused_profile.to_owned();
 		Ok(self
 			.get_mut(&active)
 			.with_context(|| format!("profile {} does not exist!", active))?)
@@ -31,8 +36,8 @@ impl Config {
 
 	pub fn get_configuration(&self) -> Result<&Configuration> {
 		Ok(self
-			.get(&self.active)
-			.with_context(|| format!("profile {} does not exist!", self.active))?)
+			.get(&self.focused_profile)
+			.with_context(|| format!("profile {} does not exist!", self.focused_profile))?)
 	}
 }
 
@@ -54,10 +59,34 @@ impl Default for Config {
 	fn default() -> Self {
 		let mut m: HashMap<String, Configuration> = HashMap::new();
 		m.insert("main".to_string(), Configuration::default());
+		let mut subs: Subreddits = HashMap::new();
+		subs.insert("wallpaper".to_string(), Subreddit::default());
+		subs.insert("wallpapers".to_string(), Subreddit::default());
+		let mobile_config = Configuration {
+			aspect_ratio: AspectRatio {
+				enable: true,
+				height: 16,
+				width: 9,
+				range: 0.5,
+			},
+			minimum_size: MinimumSize {
+				enable: true,
+				height: 1920,
+				width: 1080,
+			},
+		};
+		m.insert("mobile".to_string(), mobile_config);
+		let p = UserDirs::new()
+			.expect("cannot find user directory for current user")
+			.picture_dir()
+			.expect("cannot find picture directory for current user")
+			.to_path_buf();
 		Config {
-			active: "main".to_string(),
+			focused_profile: "main".to_string(),
+			path: p,
 			timeout: 10,
 			settings: m,
+			subreddits: subs,
 		}
 	}
 }

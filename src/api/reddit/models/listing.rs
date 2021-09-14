@@ -1,6 +1,6 @@
 use serde::Deserialize;
 
-use crate::api::config::configuration::Configuration;
+use crate::api::config::config::Config;
 
 use super::download_meta::DownloadMeta;
 
@@ -10,7 +10,7 @@ pub struct Listing {
 }
 
 impl Listing {
-	pub fn into_download_metas(self, config: &Configuration) -> Vec<DownloadMeta> {
+	pub fn into_download_metas(self, config: &Config) -> Vec<DownloadMeta> {
 		let mut result: Vec<DownloadMeta> = Vec::new();
 		for children in self.data.children.into_iter() {
 			let data = children.data;
@@ -39,7 +39,7 @@ impl Listing {
 				None => (1, 1),
 			};
 
-			let meta = DownloadMeta {
+			let mut meta = DownloadMeta {
 				subreddit_name: data.subreddit,
 				post_link: format!("https://reddit.com{}", data.permalink),
 				image_width: width,
@@ -49,6 +49,7 @@ impl Listing {
 				nsfw: data.over_18,
 				title: data.title,
 				author: data.author,
+				profile: Vec::new(),
 			};
 
 			if sub.download_first {
@@ -56,7 +57,17 @@ impl Listing {
 				continue;
 			}
 
-			if !meta.passed_checks(config) {
+			let mut should_download = false;
+
+			for (profile, setting) in config.settings.iter() {
+				if !meta.passed_checks(setting) {
+					continue;
+				}
+				meta.profile.push(profile.to_owned());
+				should_download = true;
+			}
+
+			if !should_download {
 				continue;
 			}
 

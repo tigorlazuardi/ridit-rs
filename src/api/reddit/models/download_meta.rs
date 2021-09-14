@@ -12,6 +12,7 @@ pub struct DownloadMeta {
 	pub filename: String,
 	pub title: String,
 	pub author: String,
+	pub profile: Vec<String>,
 }
 
 impl DownloadMeta {

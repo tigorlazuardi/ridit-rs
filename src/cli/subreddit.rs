@@ -39,7 +39,6 @@ impl Subreddit {
 	}
 
 	async fn add_subreddit(add: &AddSubreddit, config: &mut Config) -> Result<()> {
-		let cfg = config.get_mut_configuration()?;
 		if add.input.len() < 1 {
 			bail!("no new subreddits specified")
 		}
@@ -49,7 +48,7 @@ impl Subreddit {
 		conf.download_first = add.download_first;
 		conf.sort = add.sort;
 		for name in &add.input {
-			if let None = cfg.subreddits.get(name) {
+			if let None = config.subreddits.get(name) {
 				match Repository::subreddit_exist(name).await {
 					Ok(b) if b => {}
 					Ok(_) => {
@@ -62,7 +61,7 @@ impl Subreddit {
 					}
 				}
 			}
-			cfg.subreddits.insert(name.to_lowercase(), conf);
+			config.subreddits.insert(name.to_lowercase(), conf);
 			result.push(name);
 		}
 		write_config(config).await?;
@@ -71,13 +70,12 @@ impl Subreddit {
 	}
 
 	async fn remove_subreddit(remove: &InputOnly, config: &mut Config) -> Result<()> {
-		let cfg = config.get_mut_configuration()?;
 		if remove.input.len() < 1 {
-			bail!("no subreddits to remove")
+			bail!("no subreddit specified to remove")
 		}
 		let mut result = vec![];
 		for name in &remove.input {
-			match cfg.subreddits.remove(name) {
+			match config.subreddits.remove(name) {
 				Some(_) => result.push(name.to_owned()),
 				None => println!("subreddit {} does not exist in configuration", name),
 			}
@@ -87,15 +85,14 @@ impl Subreddit {
 	}
 
 	async fn list(opts: &ListOptions, config: &Config) -> Result<()> {
-		let profile_config = config.get_configuration()?;
 		match opts.out_format {
 			OutFormat::JSON => {
-				let val = serde_json::to_string_pretty(&profile_config.subreddits)
+				let val = serde_json::to_string_pretty(&config.subreddits)
 					.context("failed to serialize subreddits to json format")?;
 				println!("{}", val);
 			}
 			OutFormat::TOML => {
-				let val = toml::to_string_pretty(&profile_config.subreddits)
+				let val = toml::to_string_pretty(&config.subreddits)
 					.context("failed to serialize subreddits to toml format")?;
 				println!("{}", val);
 			}
@@ -111,7 +108,7 @@ pub struct AddSubreddit {
 	/// Prevent nsfw tagged images from being downloaded.
 	#[structopt(short, long)]
 	no_nsfw: bool,
-	/// Images are downloaded first before being checked for size.
+	/// Images are downloaded first before checked for size.
 	///
 	/// Not all subreddit has metadata for image size. For those kind of subreddits, you have to
 	/// download them first before the size can be checked and added to list.

@@ -16,10 +16,7 @@ use tokio_retry::{
 use super::models::download_meta::DownloadMeta;
 use crate::{
 	api::{
-		config::{
-			config::Config,
-			configuration::{Configuration, Subreddit},
-		},
+		config::{config::Config, configuration::Subreddit},
 		reddit::models::listing::Listing,
 	},
 	pkg::OnError,
@@ -51,16 +48,15 @@ impl Repository {
 		}
 	}
 
-	pub async fn download(&self, config: Arc<Configuration>) {
+	pub async fn download(&self) {
 		let mut handlers = Vec::new();
 
-		for (name, subreddit) in config.subreddits.iter() {
+		for (name, subreddit) in self.config.subreddits.iter() {
 			let this = self.clone();
 			let name = name.clone();
 			let subreddit = subreddit.clone();
-			let config = config.clone();
 			let handle = tokio::spawn(async move {
-				this.exec_download(config, &name, subreddit).await.ok();
+				this.exec_download(&name, subreddit).await.ok();
 			});
 			handlers.push(handle);
 		}
@@ -69,35 +65,26 @@ impl Repository {
 		}
 	}
 
-	async fn exec_download(
-		&self,
-		config: Arc<Configuration>,
-		name: &str,
-		subreddit: Subreddit,
-	) -> Result<()> {
-		let downloads = self.download_listing(&*config, name, subreddit).await?;
-		self.download_images(config, downloads, subreddit).await;
+	async fn exec_download(&self, name: &str, subreddit: Subreddit) -> Result<()> {
+		let downloads = self.download_listing(name, subreddit).await?;
+		self.download_images(downloads, subreddit).await;
 		Ok(())
 	}
 
-	async fn download_images(
-		&self,
-		config: Arc<Configuration>,
-		downloads: Vec<DownloadMeta>,
-		subreddit: Subreddit,
-	) {
+	async fn download_images(&self, downloads: Vec<DownloadMeta>, subreddit: Subreddit) {
 		let mut handlers = Vec::new();
-		for mut meta in downloads.into_iter() {
-			if Repository::file_exists(&self.config.active, &*config, &meta).await {
-				continue;
+		'meta: for mut meta in downloads.into_iter() {
+			for profile in &meta.profile {
+				if self.file_exists(profile, &meta).await {
+					continue 'meta;
+				}
 			}
 			let this = self.clone();
-			let config = config.clone();
 			let sem = self.semaphore.clone();
 			let handle = tokio::spawn(async move {
 				// release semaphore lock on end of scope
 				let _x = sem.acquire().await.unwrap();
-				this.download_image(&*config, &mut meta, subreddit).await?;
+				this.download_image(&mut meta, subreddit).await?;
 				Ok::<(), Error>(())
 			});
 			handlers.push(handle);
@@ -109,7 +96,6 @@ impl Repository {
 
 	async fn download_listing(
 		&self,
-		config: &Configuration,
 		name: &str,
 		subreddit: Subreddit,
 	) -> Result<Vec<DownloadMeta>> {
@@ -138,23 +124,29 @@ impl Repository {
 				listing_url
 			)
 		})?;
-		Ok(result.into_download_metas(config))
+		Ok(result.into_download_metas(&self.config))
 	}
 
-	async fn download_image(
-		&self,
-		config: &Configuration,
-		meta: &mut DownloadMeta,
-		subreddit: Subreddit,
-	) -> Result<()> {
+	async fn download_image(&self, meta: &mut DownloadMeta, subreddit: Subreddit) -> Result<()> {
 		if subreddit.download_first {
 			self.poke_image_size(meta).await?;
-			if !meta.passed_checks(config) {
+			let mut should_continue = false;
+			for (profile, setting) in self.config.iter() {
+				if !meta.passed_checks(setting) {
+					continue;
+				}
+				should_continue = true;
+				meta.profile.push(profile.to_owned());
+			}
+			if !should_continue {
 				return Ok(());
 			}
 		}
 
-		println!("[{}] downloading image {}", meta.subreddit_name, meta.url);
+		println!(
+			"{:?} [{}] downloading image {}",
+			meta.profile, meta.subreddit_name, meta.url
+		);
 		let retry_strategy = FixedInterval::from_millis(100).map(jitter).take(3);
 		let response = Retry::spawn(retry_strategy, || async {
 			let res = self.client.get(&meta.url).send().await?;
@@ -168,42 +160,41 @@ impl Repository {
 			)
 		})?;
 
-		Repository::ensure_download_dir(&self.config.active, config, meta).await?;
+		self.ensure_download_dir(meta).await?;
 
 		let temp_file = self.store_to_temp(response, meta).await?;
-		let download_location = Repository::download_location(&self.config.active, config, meta);
 
-		fs::copy(temp_file, &download_location)
-			.await
-			.with_context(|| {
-				format!(
-					"failed to copy file from tmp dir to {}",
-					download_location.display()
-				)
-			})?;
+		for profile in &meta.profile {
+			let download_location = self.download_location(profile, meta);
+			fs::copy(&temp_file, &download_location)
+				.await
+				.with_context(|| {
+					format!(
+						"failed to copy file from tmp dir to {}",
+						download_location.display()
+					)
+				})?;
 
-		println!(
-			"[{}] image downloaded to {}",
-			meta.subreddit_name,
-			download_location.display()
-		);
+			println!(
+				"[{}] image downloaded to {}",
+				meta.subreddit_name,
+				download_location.display()
+			);
+		}
 
 		Ok(())
 	}
 
-	async fn ensure_download_dir(
-		profile: &str,
-		config: &Configuration,
-		meta: &DownloadMeta,
-	) -> Result<()> {
-		let download_dir = Repository::download_dir(profile, config, meta);
-		fs::create_dir_all(&download_dir).await.with_context(|| {
-			format!(
-				"failed to create download directory on: {}",
-				download_dir.display()
-			)
-		})?;
-
+	async fn ensure_download_dir(&self, meta: &DownloadMeta) -> Result<()> {
+		for profile in &meta.profile {
+			let download_dir = self.config.path.join(profile).join(&meta.subreddit_name);
+			fs::create_dir_all(&download_dir).await.with_context(|| {
+				format!(
+					"failed to create download directory on: {}",
+					download_dir.display()
+				)
+			})?;
+		}
 		Ok(())
 	}
 
@@ -244,20 +235,16 @@ impl Repository {
 		Ok(())
 	}
 
-	fn download_dir(profile: &str, config: &Configuration, meta: &DownloadMeta) -> PathBuf {
-		config
-			.download
-			.path
-			.join(profile)
-			.join(&meta.subreddit_name)
+	fn download_dir(&self, profile: &str, meta: &DownloadMeta) -> PathBuf {
+		self.config.path.join(profile).join(&meta.subreddit_name)
 	}
 
-	fn download_location(profile: &str, config: &Configuration, meta: &DownloadMeta) -> PathBuf {
-		Repository::download_dir(profile, config, meta).join(&meta.filename)
+	fn download_location(&self, profile: &str, meta: &DownloadMeta) -> PathBuf {
+		self.download_dir(profile, meta).join(&meta.filename)
 	}
 
-	async fn file_exists(profile: &str, config: &Configuration, meta: &DownloadMeta) -> bool {
-		fs::metadata(Repository::download_location(profile, config, meta))
+	async fn file_exists(&self, profile: &str, meta: &DownloadMeta) -> bool {
+		fs::metadata(self.download_location(profile, meta))
 			.await
 			.is_ok()
 	}
@@ -265,7 +252,6 @@ impl Repository {
 	async fn store_to_temp(&self, mut resp: Response, meta: &DownloadMeta) -> Result<PathBuf> {
 		let dir_path = std::env::temp_dir()
 			.join("ridit")
-			.join(&self.config.active)
 			.join(&meta.subreddit_name);
 		fs::create_dir_all(&dir_path).await?;
 		let file_path = dir_path.join(&meta.filename);

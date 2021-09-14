@@ -17,9 +17,6 @@ pub enum Download {
 	/// Sets connect timeout (in seconds)
 	#[structopt(visible_aliases = &["ct", "connect"])]
 	ConnectTimeout { input: u32 },
-	/// Prints download configuration
-	#[structopt(visible_aliases = &["ls", "list"])]
-	Print(PrintOpts),
 }
 
 #[derive(StructOpt, Debug, Clone)]
@@ -33,14 +30,12 @@ impl Download {
 		Ok(match &self {
 			Self::Path { input } => Download::path(input, config).await?,
 			Self::ConnectTimeout { input } => Download::connect_timeout(*input, config).await?,
-			Self::Print(p) => Download::print(p, config).await?,
 		})
 	}
 
 	async fn path<P: AsRef<Path>>(path: P, config: &mut Config) -> Result<()> {
 		let p = path.as_ref().to_path_buf();
-		let cfg = config.get_mut_configuration()?;
-		cfg.download.path = p.clone();
+		config.path = p.clone();
 		write_config(config).await?;
 		println!("download path is set to {}", p.display());
 		Ok(())
@@ -50,21 +45,6 @@ impl Download {
 		config.timeout = input;
 		write_config(config).await?;
 		println!("timeout is set to {} seconds", input);
-		Ok(())
-	}
-
-	async fn print(opts: &PrintOpts, config: &Config) -> Result<()> {
-		let cfg = config.get_configuration()?;
-		match opts.out_format {
-			OutFormat::TOML => {
-				let val = toml::to_string_pretty(&cfg.download)?;
-				println!("{}", val);
-			}
-			OutFormat::JSON => {
-				let val = serde_json::to_string_pretty(&cfg.download)?;
-				println!("{}", val);
-			}
-		}
 		Ok(())
 	}
 }

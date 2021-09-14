@@ -1,29 +1,16 @@
-use std::{
-	collections::HashMap, convert::Infallible, default::Default, fmt::Display, path::PathBuf,
-	str::FromStr,
-};
+use std::{convert::Infallible, default::Default, fmt::Display, str::FromStr};
 
-use directories::UserDirs;
 use serde::{Deserialize, Serialize};
-
-pub type Subreddits = HashMap<String, Subreddit>;
 
 #[derive(Deserialize, Debug, Clone, Serialize)]
 pub struct Configuration {
-	pub download: Download,
-	pub subreddits: Subreddits,
 	pub aspect_ratio: AspectRatio,
 	pub minimum_size: MinimumSize,
 }
 
 impl Default for Configuration {
 	fn default() -> Self {
-		let mut m: HashMap<String, Subreddit> = HashMap::new();
-		m.insert("wallpaper".to_string(), Subreddit::default());
-		m.insert("wallpapers".to_string(), Subreddit::default());
 		Configuration {
-			download: Download::default(),
-			subreddits: m,
 			aspect_ratio: AspectRatio::default(),
 			minimum_size: MinimumSize::default(),
 		}
@@ -62,24 +49,6 @@ impl Default for MinimumSize {
 			enable: true,
 			height: 1080,
 			width: 1920,
-		}
-	}
-}
-
-#[derive(Deserialize, Debug, Clone, Serialize)]
-pub struct Download {
-	pub path: PathBuf,
-}
-
-impl Default for Download {
-	fn default() -> Self {
-		let dir = UserDirs::new().expect("failed to determine user directory");
-		let dir = dir
-			.picture_dir()
-			.expect("failed to get user picture directory")
-			.to_path_buf();
-		Download {
-			path: dir.join("ridit"),
 		}
 	}
 }
