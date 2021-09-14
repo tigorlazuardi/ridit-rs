@@ -2,6 +2,13 @@
 ## [Unreleased]
 
 
+<a name="v0.4.2"></a>
+## [v0.4.2] - 2021-09-14
+### Feature
+- **cli:** added progress bar for downloading
+- **config:** adding subreddits check now handled in parallel
+
+
 <a name="v0.4.1"></a>
 ## [v0.4.1] - 2021-09-14
 ### Feature
@@ -158,7 +165,8 @@
 - **cli:** moved functions to method
 
 
-[Unreleased]: https://github.com/tigorlazuardi/ridit-rs/compare/v0.4.1...HEAD
+[Unreleased]: https://github.com/tigorlazuardi/ridit-rs/compare/v0.4.2...HEAD
+[v0.4.2]: https://github.com/tigorlazuardi/ridit-rs/compare/v0.4.1...v0.4.2
 [v0.4.1]: https://github.com/tigorlazuardi/ridit-rs/compare/v0.4.0...v0.4.1
 [v0.4.0]: https://github.com/tigorlazuardi/ridit-rs/compare/v0.3.0...v0.4.0
 [v0.3.0]: https://github.com/tigorlazuardi/ridit-rs/compare/v0.2.1...v0.3.0
