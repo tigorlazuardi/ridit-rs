@@ -8,7 +8,7 @@ use crate::api::{
 	},
 	reddit::repository::Repository,
 };
-use anyhow::{bail, Context, Result};
+use anyhow::{bail, Context, Error, Result};
 
 use crate::api::config::configuration::Subreddit as SubredditConf;
 
@@ -42,27 +42,38 @@ impl Subreddit {
 		if add.input.len() < 1 {
 			bail!("no new subreddits specified")
 		}
-		let mut result = vec![];
 		let mut conf = SubredditConf::default();
 		conf.nsfw = !add.no_nsfw;
 		conf.download_first = add.download_first;
 		conf.sort = add.sort;
+		let mut handlers = Vec::new();
 		for name in &add.input {
-			if let None = config.subreddits.get(name) {
-				match Repository::subreddit_exist(name).await {
-					Ok(b) if b => {}
-					Ok(_) => {
-						println!("subreddit '{}' seems to be empty", name);
-						continue;
-					}
-					Err(_) => {
-						println!("subreddit '{}' seems to be invalid or don't exist", name);
-						continue;
-					}
+			let exist = config.subreddits.get(name).is_some();
+			let name = name.to_owned();
+			let handler = tokio::spawn(async move {
+				if exist {
+					return (name, Ok::<bool, Error>(true));
+				}
+				let result = Repository::subreddit_exist(&name).await;
+				(name, result)
+			});
+			handlers.push(handler);
+		}
+		let mut result = vec![];
+		for handler in handlers {
+			let (name, join_result) = handler.await.unwrap();
+			match join_result {
+				Ok(b) if b => {
+					config.subreddits.insert(name.to_lowercase(), conf);
+					result.push(name);
+				}
+				Ok(_) => {
+					println!("subreddit '{}' seems to be empty", name);
+				}
+				Err(_) => {
+					println!("subreddit '{}' seems to be invalid or don't exist", name);
 				}
 			}
-			config.subreddits.insert(name.to_lowercase(), conf);
-			result.push(name);
 		}
 		write_config(config).await?;
 		println!("added subreddits: {:?}", result);
