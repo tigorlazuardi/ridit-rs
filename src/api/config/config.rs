@@ -67,7 +67,7 @@ impl Default for Config {
 				enable: true,
 				height: 16,
 				width: 9,
-				range: 0.5,
+				range: 0.3,
 			},
 			minimum_size: MinimumSize {
 				enable: true,
@@ -80,7 +80,8 @@ impl Default for Config {
 			.expect("cannot find user directory for current user")
 			.picture_dir()
 			.expect("cannot find picture directory for current user")
-			.to_path_buf();
+			.to_path_buf()
+			.join("ridit");
 		Config {
 			focused_profile: "main".to_string(),
 			path: p,
