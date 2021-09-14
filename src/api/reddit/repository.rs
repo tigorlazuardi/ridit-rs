@@ -1,7 +1,14 @@
-use std::{path::PathBuf, sync::Arc, time::Duration};
+use std::{
+	convert::TryInto,
+	path::PathBuf,
+	sync::{Arc, Mutex},
+	time::Duration,
+};
 
+use crate::pkg::OnError;
 use anyhow::{Context, Error, Result};
 use imagesize::blob_size;
+
 use reqwest::{header::RANGE, Client, Response};
 use tokio::{
 	fs::{self, File},
@@ -14,19 +21,18 @@ use tokio_retry::{
 };
 
 use super::models::download_meta::DownloadMeta;
-use crate::{
-	api::{
-		config::{config::Config, configuration::Subreddit},
-		reddit::models::listing::Listing,
-	},
-	pkg::OnError,
+use crate::api::{
+	config::{config::Config, configuration::Subreddit},
+	reddit::models::listing::Listing,
 };
+use linya::Progress;
 
 #[derive(Clone, Debug)]
 pub struct Repository {
 	client: Arc<Client>,
 	config: Arc<Config>,
 	semaphore: Arc<Semaphore>,
+	multibar: Arc<Mutex<Progress>>,
 }
 
 static APP_USER_AGENT: &str = concat!(env!("CARGO_PKG_NAME"), "/", env!("CARGO_PKG_VERSION"));
@@ -40,11 +46,12 @@ impl Repository {
 			.context("failed to create request client")
 			.unwrap();
 
-		let semaphore = Arc::new(Semaphore::new(6));
+		let semaphore = Arc::new(Semaphore::new(4));
 		Self {
 			client: Arc::new(client),
 			config,
 			semaphore,
+			multibar: Arc::new(Mutex::new(Progress::new())),
 		}
 	}
 
@@ -143,10 +150,10 @@ impl Repository {
 			}
 		}
 
-		println!(
-			"{:?} [{}] downloading image {}",
-			meta.profile, meta.subreddit_name, meta.url
-		);
+		// println!(
+		// 	"{:?} [{}] downloading image {}",
+		// 	meta.profile, meta.subreddit_name, meta.url
+		// );
 		let retry_strategy = FixedInterval::from_millis(100).map(jitter).take(3);
 		let response = Retry::spawn(retry_strategy, || async {
 			let res = self.client.get(&meta.url).send().await?;
@@ -175,11 +182,11 @@ impl Repository {
 					)
 				})?;
 
-			println!(
-				"[{}] image downloaded to {}",
-				meta.subreddit_name,
-				download_location.display()
-			);
+			// println!(
+			// 	"[{}] image downloaded to {}",
+			// 	meta.subreddit_name,
+			// 	download_location.display()
+			// );
 		}
 
 		Ok(())
@@ -259,12 +266,33 @@ impl Repository {
 			.await
 			.context("cannot create file on tmp dir")?;
 
-		while let Some(chunk) = resp.chunk().await? {
-			file.write(&chunk)
-				.await
-				.context("failed to write to temp dir")?;
+		let prefix = format!(
+			"{:?} [{}] downloading {}",
+			meta.profile, meta.subreddit_name, meta.url
+		);
+		if let Some(length) = resp.content_length() {
+			let bar = self
+				.multibar
+				.lock()
+				.unwrap()
+				.bar(length.try_into().unwrap(), prefix);
+			while let Some(chunk) = resp.chunk().await? {
+				file.write(&chunk)
+					.await
+					.with_context(|| format!("failed to save image from {}", meta.url))?;
+				self.multibar
+					.lock()
+					.unwrap()
+					.inc_and_draw(&bar, chunk.len())
+			}
+		} else {
+			println!("{} downloading {}", prefix, meta.filename);
+			while let Some(chunk) = resp.chunk().await? {
+				file.write(&chunk)
+					.await
+					.with_context(|| format!("failed to save image from {}", meta.url))?;
+			}
 		}
-
 		Ok(file_path)
 	}
 
