@@ -49,9 +49,8 @@ impl Subreddit {
 		conf.download_first = add.download_first;
 		conf.sort = add.sort;
 		for name in &add.input {
-			let name = name.to_owned();
-			if let None = cfg.subreddits.get(&name) {
-				match Repository::subreddit_exist(&name).await {
+			if let None = cfg.subreddits.get(name) {
+				match Repository::subreddit_exist(name).await {
 					Ok(b) if b => {}
 					Ok(_) => {
 						println!("subreddit '{}' seems to be empty", name);
@@ -63,8 +62,8 @@ impl Subreddit {
 					}
 				}
 			}
-			cfg.subreddits.insert(name.to_owned().to_lowercase(), conf);
-			result.push(name.to_owned());
+			cfg.subreddits.insert(name.to_lowercase(), conf);
+			result.push(name);
 		}
 		write_config(config).await?;
 		println!("added subreddits: {:?}", result);
