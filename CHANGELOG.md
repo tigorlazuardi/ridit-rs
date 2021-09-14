@@ -2,6 +2,17 @@
 ## [Unreleased]
 
 
+<a name="v0.4.1"></a>
+## [v0.4.1] - 2021-09-14
+### Feature
+- **cli:** adding subreddits only checks the net if it is not registered yet
+- **config:** update default path to ~/Pictures/ridit for linux and default mobile range to 0.3
+- **whole:** downloads now start downloading from every subreddit for every profile
+
+### Refactor
+- **impl Subreddit:** for loop does not use name.to_owned() anymore
+
+
 <a name="v0.4.0"></a>
 ## [v0.4.0] - 2021-09-13
 ### Feature
@@ -147,7 +158,8 @@
 - **cli:** moved functions to method
 
 
-[Unreleased]: https://github.com/tigorlazuardi/ridit-rs/compare/v0.4.0...HEAD
+[Unreleased]: https://github.com/tigorlazuardi/ridit-rs/compare/v0.4.1...HEAD
+[v0.4.1]: https://github.com/tigorlazuardi/ridit-rs/compare/v0.4.0...v0.4.1
 [v0.4.0]: https://github.com/tigorlazuardi/ridit-rs/compare/v0.3.0...v0.4.0
 [v0.3.0]: https://github.com/tigorlazuardi/ridit-rs/compare/v0.2.1...v0.3.0
 [v0.2.1]: https://github.com/tigorlazuardi/ridit-rs/compare/v0.2.0...v0.2.1
