@@ -2,6 +2,18 @@
 ## [Unreleased]
 
 
+<a name="v0.4.3"></a>
+## [v0.4.3] - 2021-09-15
+### Feature
+- **config:** moved from hashmap to btreemap
+- **reddit:** increased poke image size from 512 bytes to 20kB for image signature
+- **reddit:** changed user agent to include repo name
+- **reddit:** progress_bar now only show on certain enums
+
+### Fix
+- **reddit:** now error from downloading images are properly reported
+
+
 <a name="v0.4.2"></a>
 ## [v0.4.2] - 2021-09-14
 ### Feature
@@ -165,7 +177,8 @@
 - **cli:** moved functions to method
 
 
-[Unreleased]: https://github.com/tigorlazuardi/ridit-rs/compare/v0.4.2...HEAD
+[Unreleased]: https://github.com/tigorlazuardi/ridit-rs/compare/v0.4.3...HEAD
+[v0.4.3]: https://github.com/tigorlazuardi/ridit-rs/compare/v0.4.2...v0.4.3
 [v0.4.2]: https://github.com/tigorlazuardi/ridit-rs/compare/v0.4.1...v0.4.2
 [v0.4.1]: https://github.com/tigorlazuardi/ridit-rs/compare/v0.4.0...v0.4.1
 [v0.4.0]: https://github.com/tigorlazuardi/ridit-rs/compare/v0.3.0...v0.4.0
