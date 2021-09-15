@@ -3,6 +3,7 @@ use std::{
 	path::PathBuf,
 	sync::{Arc, Mutex},
 	time::Duration,
+	usize,
 };
 
 use crate::pkg::OnError;
@@ -35,6 +36,13 @@ pub struct Repository {
 	multibar: Arc<Mutex<Progress>>,
 }
 
+#[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord)]
+pub enum PrintOut {
+	Bar,
+	Text,
+	None,
+}
+
 static APP_USER_AGENT: &str = concat!(env!("CARGO_PKG_NAME"), "/", env!("CARGO_PKG_VERSION"));
 
 impl Repository {
@@ -46,7 +54,7 @@ impl Repository {
 			.context("failed to create request client")
 			.unwrap();
 
-		let semaphore = Arc::new(Semaphore::new(4));
+		let semaphore = Arc::new(Semaphore::new(8));
 		Self {
 			client: Arc::new(client),
 			config,
@@ -55,7 +63,7 @@ impl Repository {
 		}
 	}
 
-	pub async fn download(&self) {
+	pub async fn download(&self, display: PrintOut) {
 		let mut handlers = Vec::new();
 
 		for (name, subreddit) in self.config.subreddits.iter() {
@@ -63,7 +71,7 @@ impl Repository {
 			let name = name.clone();
 			let subreddit = subreddit.clone();
 			let handle = tokio::spawn(async move {
-				this.exec_download(&name, subreddit).await.ok();
+				this.exec_download(&name, subreddit, display).await.ok();
 			});
 			handlers.push(handle);
 		}
@@ -72,13 +80,23 @@ impl Repository {
 		}
 	}
 
-	async fn exec_download(&self, name: &str, subreddit: Subreddit) -> Result<()> {
+	async fn exec_download(
+		&self,
+		name: &str,
+		subreddit: Subreddit,
+		display: PrintOut,
+	) -> Result<()> {
 		let downloads = self.download_listing(name, subreddit).await?;
-		self.download_images(downloads, subreddit).await;
+		self.download_images(downloads, subreddit, display).await;
 		Ok(())
 	}
 
-	async fn download_images(&self, downloads: Vec<DownloadMeta>, subreddit: Subreddit) {
+	async fn download_images(
+		&self,
+		downloads: Vec<DownloadMeta>,
+		subreddit: Subreddit,
+		display: PrintOut,
+	) {
 		let mut handlers = Vec::new();
 		'meta: for mut meta in downloads.into_iter() {
 			for profile in &meta.profile {
@@ -91,7 +109,7 @@ impl Repository {
 			let handle = tokio::spawn(async move {
 				// release semaphore lock on end of scope
 				let _x = sem.acquire().await.unwrap();
-				this.download_image(&mut meta, subreddit).await?;
+				this.download_image(&mut meta, subreddit, display).await?;
 				Ok::<(), Error>(())
 			});
 			handlers.push(handle);
@@ -134,12 +152,20 @@ impl Repository {
 		Ok(result.into_download_metas(&self.config))
 	}
 
-	async fn download_image(&self, meta: &mut DownloadMeta, subreddit: Subreddit) -> Result<()> {
+	async fn download_image(
+		&self,
+		meta: &mut DownloadMeta,
+		subreddit: Subreddit,
+		display: PrintOut,
+	) -> Result<()> {
 		if subreddit.download_first {
 			self.poke_image_size(meta).await?;
 			let mut should_continue = false;
 			for (profile, setting) in self.config.iter() {
 				if !meta.passed_checks(setting) {
+					continue;
+				}
+				if self.file_exists(profile, meta).await {
 					continue;
 				}
 				should_continue = true;
@@ -169,7 +195,7 @@ impl Repository {
 
 		self.ensure_download_dir(meta).await?;
 
-		let temp_file = self.store_to_temp(response, meta).await?;
+		let temp_file = self.store_to_temp(response, meta, display).await?;
 
 		for profile in &meta.profile {
 			let download_location = self.download_location(profile, meta);
@@ -181,12 +207,6 @@ impl Repository {
 						download_location.display()
 					)
 				})?;
-
-			// println!(
-			// 	"[{}] image downloaded to {}",
-			// 	meta.subreddit_name,
-			// 	download_location.display()
-			// );
 		}
 
 		Ok(())
@@ -256,44 +276,75 @@ impl Repository {
 			.is_ok()
 	}
 
-	async fn store_to_temp(&self, mut resp: Response, meta: &DownloadMeta) -> Result<PathBuf> {
+	async fn store_to_temp(
+		&self,
+		resp: Response,
+		meta: &DownloadMeta,
+		display: PrintOut,
+	) -> Result<PathBuf> {
 		let dir_path = std::env::temp_dir()
 			.join("ridit")
 			.join(&meta.subreddit_name);
 		fs::create_dir_all(&dir_path).await?;
 		let file_path = dir_path.join(&meta.filename);
-		let mut file = File::create(&file_path)
+		let file = File::create(&file_path)
 			.await
 			.context("cannot create file on tmp dir")?;
-
+		let noop = |_| {};
 		let prefix = format!(
 			"{:?} [{}] downloading {}",
 			meta.profile, meta.subreddit_name, meta.url
 		);
-		if let Some(length) = resp.content_length() {
-			let bar = self
-				.multibar
-				.lock()
-				.unwrap()
-				.bar(length.try_into().unwrap(), prefix);
-			while let Some(chunk) = resp.chunk().await? {
-				file.write(&chunk)
+		match display {
+			PrintOut::Bar => {
+				if let Some(length) = resp.content_length() {
+					let bar = self
+						.multibar
+						.lock()
+						.unwrap()
+						.bar(length.try_into().unwrap(), &prefix);
+					Repository::store_internal(resp, file, &meta.url, |lenght| {
+						self.multibar.lock().unwrap().inc_and_draw(&bar, lenght)
+					})
 					.await
-					.with_context(|| format!("failed to save image from {}", meta.url))?;
-				self.multibar
-					.lock()
-					.unwrap()
-					.inc_and_draw(&bar, chunk.len())
+					.map_err(|err| {
+						println!("{} {}", prefix, "error");
+						err
+					})?;
+				} else {
+					Repository::store_internal(resp, file, &meta.url, noop).await?;
+				}
 			}
-		} else {
-			println!("{} downloading {}", prefix, meta.filename);
-			while let Some(chunk) = resp.chunk().await? {
-				file.write(&chunk)
+			PrintOut::Text => {
+				println!("{}", prefix);
+				Repository::store_internal(resp, file, &meta.url, noop)
 					.await
-					.with_context(|| format!("failed to save image from {}", meta.url))?;
+					.map_err(|err| {
+						println!("{} {}", prefix, "error");
+						err
+					})?;
+				println!("{} {}", prefix, "done");
+			}
+			PrintOut::None => {
+				Repository::store_internal(resp, file, &meta.url, noop).await?;
 			}
 		}
 		Ok(file_path)
+	}
+
+	async fn store_internal<F: Fn(usize)>(
+		mut resp: Response,
+		mut file: File,
+		url: &str,
+		f: F,
+	) -> Result<()> {
+		while let Some(chunk) = resp.chunk().await? {
+			f(chunk.len());
+			file.write(&chunk)
+				.await
+				.with_context(|| format!("failed to save image from {}", url))?;
+		}
+		Ok(())
 	}
 
 	/// Checks to reddit if subreddit exists
