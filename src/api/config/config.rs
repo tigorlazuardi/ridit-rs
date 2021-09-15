@@ -1,5 +1,5 @@
 use std::{
-	collections::HashMap,
+	collections::BTreeMap,
 	ops::{Deref, DerefMut},
 	path::PathBuf,
 };
@@ -13,8 +13,8 @@ use super::configuration::{AspectRatio, Configuration, MinimumSize, Subreddit};
 
 pub static CONFIG_FILENAME: &str = "ridit.toml";
 
-pub type Subreddits = HashMap<String, Subreddit>;
-pub type Settings = HashMap<String, Configuration>;
+pub type Subreddits = BTreeMap<String, Subreddit>;
+pub type Settings = BTreeMap<String, Configuration>;
 
 #[derive(Debug, Deserialize, Serialize, Clone)]
 pub struct Config {
@@ -42,7 +42,7 @@ impl Config {
 }
 
 impl Deref for Config {
-	type Target = HashMap<String, Configuration>;
+	type Target = BTreeMap<String, Configuration>;
 
 	fn deref(&self) -> &Self::Target {
 		&self.settings
@@ -57,9 +57,9 @@ impl DerefMut for Config {
 
 impl Default for Config {
 	fn default() -> Self {
-		let mut m: HashMap<String, Configuration> = HashMap::new();
+		let mut m: BTreeMap<String, Configuration> = BTreeMap::new();
 		m.insert("main".to_string(), Configuration::default());
-		let mut subs: Subreddits = HashMap::new();
+		let mut subs: Subreddits = BTreeMap::new();
 		subs.insert("wallpaper".to_string(), Subreddit::default());
 		subs.insert("wallpapers".to_string(), Subreddit::default());
 		let mobile_config = Configuration {
