@@ -7,7 +7,7 @@ use std::{
 };
 
 use crate::pkg::OnError;
-use anyhow::{Context, Error, Result};
+use anyhow::{bail, Context, Error, Result};
 use imagesize::blob_size;
 
 use reqwest::{header::RANGE, Client, Response};
@@ -114,13 +114,18 @@ impl Repository {
 			let handle = tokio::spawn(async move {
 				// release semaphore lock on end of scope
 				let _x = sem.acquire().await.unwrap();
-				this.download_image(&mut meta, subreddit, display).await?;
-				Ok::<(), Error>(())
+				(
+					this.download_image(&mut meta, subreddit, display).await,
+					meta,
+				)
 			});
 			handlers.push(handle);
 		}
 		for handle in handlers {
-			handle.await.log_error().ok();
+			let (op, meta) = handle.await.unwrap();
+			if let Err(err) = op {
+				println!("{:?} [{}]: {}", meta.profile, meta.subreddit_name, err);
+			}
 		}
 	}
 
@@ -186,7 +191,7 @@ impl Repository {
 		// 	meta.profile, meta.subreddit_name, meta.url
 		// );
 		let retry_strategy = FixedInterval::from_millis(100).map(jitter).take(3);
-		let response = Retry::spawn(retry_strategy, || async {
+		let response: Response = Retry::spawn(retry_strategy, || async {
 			let res = self.client.get(&meta.url).send().await?;
 			Ok::<Response, Error>(res)
 		})
@@ -197,6 +202,18 @@ impl Repository {
 				meta.url
 			)
 		})?;
+
+		let status = response.status();
+		if !status.is_success() {
+			bail!(format!(
+				"download from {} gives [{}: {}] status code",
+				meta.url,
+				status.as_u16(),
+				status
+					.canonical_reason()
+					.unwrap_or_else(|| "Unknown Reason"),
+			));
+		}
 
 		self.ensure_download_dir(meta).await?;
 
@@ -260,7 +277,7 @@ impl Repository {
 			}
 		}
 		let size = blob_size(&data)
-			.with_context(|| format!("error getting dimension from: {}", meta.url))?;
+			.with_context(|| format!("error getting image dimension from: {}", meta.url))?;
 
 		meta.image_height = size.height;
 		meta.image_width = size.width;
