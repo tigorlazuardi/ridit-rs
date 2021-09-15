@@ -43,7 +43,12 @@ pub enum PrintOut {
 	None,
 }
 
-static APP_USER_AGENT: &str = concat!(env!("CARGO_PKG_NAME"), "/", env!("CARGO_PKG_VERSION"));
+static APP_USER_AGENT: &str = concat!(
+	env!("CARGO_PKG_NAME"),
+	"/",
+	env!("CARGO_PKG_VERSION"),
+	"(+https://github.com/tigorlazuardi/ridit-rs)"
+);
 
 impl Repository {
 	pub fn new(config: Arc<Config>) -> Self {
