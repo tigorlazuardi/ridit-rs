@@ -233,7 +233,7 @@ impl Repository {
 	/// Checks for image size by downloading small image size first, then updates the given
 	/// DownloadMeta information on success. Note this does not download the whole file.
 	async fn poke_image_size(&self, meta: &mut DownloadMeta) -> Result<()> {
-		const LIMIT: usize = 0x200;
+		const LIMIT: usize = 1024 * 2 * 10;
 		let retry_strategy = FixedInterval::from_millis(100).map(jitter).take(3);
 		let mut resp = Retry::spawn(retry_strategy, || async {
 			let res = self
