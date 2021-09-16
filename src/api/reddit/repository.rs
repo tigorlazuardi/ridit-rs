@@ -6,7 +6,6 @@ use std::{
 	usize,
 };
 
-use crate::pkg::OnError;
 use anyhow::{bail, Context, Error, Result};
 use imagesize::blob_size;
 
@@ -68,21 +67,26 @@ impl Repository {
 		}
 	}
 
-	pub async fn download(&self, display: PrintOut) {
+	pub async fn download(&self, display: PrintOut) -> Vec<Result<DownloadMeta, Error>> {
 		let mut handlers = Vec::new();
 
 		for (name, subreddit) in self.config.subreddits.iter() {
 			let this = self.clone();
 			let name = name.clone();
 			let subreddit = subreddit.clone();
-			let handle = tokio::spawn(async move {
-				this.exec_download(&name, subreddit, display).await.ok();
-			});
+			let handle =
+				tokio::spawn(async move { this.exec_download(&name, subreddit, display).await });
 			handlers.push(handle);
 		}
+		let mut v = Vec::new();
 		for handle in handlers {
-			handle.await.log_error().ok();
+			let op = handle.await.unwrap();
+			match op {
+				Ok(res) => v.extend(res),
+				Err(err) => println!("{:#?}", err),
+			}
 		}
+		v
 	}
 
 	async fn exec_download(
@@ -90,10 +94,9 @@ impl Repository {
 		name: &str,
 		subreddit: Subreddit,
 		display: PrintOut,
-	) -> Result<()> {
+	) -> Result<Vec<Result<DownloadMeta, Error>>> {
 		let downloads = self.download_listing(name, subreddit).await?;
-		self.download_images(downloads, subreddit, display).await;
-		Ok(())
+		Ok(self.download_images(downloads, subreddit, display).await)
 	}
 
 	async fn download_images(
@@ -101,7 +104,7 @@ impl Repository {
 		downloads: Vec<DownloadMeta>,
 		subreddit: Subreddit,
 		display: PrintOut,
-	) {
+	) -> Vec<Result<DownloadMeta, Error>> {
 		let mut handlers = Vec::new();
 		'meta: for mut meta in downloads.into_iter() {
 			for profile in &meta.profile {
@@ -114,19 +117,17 @@ impl Repository {
 			let handle = tokio::spawn(async move {
 				// release semaphore lock on end of scope
 				let _x = sem.acquire().await.unwrap();
-				(
-					this.download_image(&mut meta, subreddit, display).await,
-					meta,
-				)
+				this.download_image(&mut meta, subreddit, display)
+					.await
+					.map(|_| meta)
 			});
 			handlers.push(handle);
 		}
+		let mut v = Vec::new();
 		for handle in handlers {
-			let (op, meta) = handle.await.unwrap();
-			if let Err(err) = op {
-				println!("{:?} [{}]: {}", meta.profile, meta.subreddit_name, err);
-			}
+			v.push(handle.await.unwrap());
 		}
+		v
 	}
 
 	async fn download_listing(

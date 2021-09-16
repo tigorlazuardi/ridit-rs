@@ -12,6 +12,10 @@ pub async fn start(config: &Config) -> Result<()> {
 	let cfg = Arc::new(config.to_owned());
 	let repo = Repository::new(cfg.clone());
 
-	repo.download(PrintOut::Bar).await;
+	for op in repo.download(PrintOut::Bar).await.into_iter() {
+		if let Err(err) = op {
+			println!("{:?}", err);
+		}
+	}
 	Ok(())
 }
