@@ -90,10 +90,7 @@ impl Listing {
 
 #[derive(Deserialize)]
 pub struct Data {
-	pub modhash: String,
-	pub dist: i64,
 	pub children: Vec<Children>,
-	pub after: String,
 }
 
 #[derive(Deserialize)]
