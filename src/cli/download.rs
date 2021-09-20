@@ -55,7 +55,7 @@ impl Download {
 	async fn threads(input: usize, config: &mut Config) -> Result<()> {
 		config.download_threads = input;
 		write_config(config).await?;
-		println!("download threads are set to {} seconds", input);
+		println!("download thread is set to {} threads", input);
 		Ok(())
 	}
 }
