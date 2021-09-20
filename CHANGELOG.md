@@ -2,6 +2,12 @@
 ## [Unreleased]
 
 
+<a name="v0.4.9"></a>
+## [v0.4.9] - 2021-09-20
+### Feature
+- **pad:** added padding on bar text
+
+
 <a name="v0.4.8"></a>
 ## [v0.4.8] - 2021-09-20
 ### Clean
@@ -247,7 +253,8 @@
 - **cli:** moved functions to method
 
 
-[Unreleased]: https://github.com/tigorlazuardi/ridit-rs/compare/v0.4.8...HEAD
+[Unreleased]: https://github.com/tigorlazuardi/ridit-rs/compare/v0.4.9...HEAD
+[v0.4.9]: https://github.com/tigorlazuardi/ridit-rs/compare/v0.4.8...v0.4.9
 [v0.4.8]: https://github.com/tigorlazuardi/ridit-rs/compare/v0.4.7...v0.4.8
 [v0.4.7]: https://github.com/tigorlazuardi/ridit-rs/compare/v0.4.6...v0.4.7
 [v0.4.6]: https://github.com/tigorlazuardi/ridit-rs/compare/v0.4.5...v0.4.6
