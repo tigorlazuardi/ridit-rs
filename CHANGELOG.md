@@ -2,6 +2,22 @@
 ## [Unreleased]
 
 
+<a name="v0.4.6"></a>
+## [v0.4.6] - 2021-09-20
+### Feature
+- **config:** added download threads support. (default to 4).
+
+### Fix
+- **config:** now config if field is not complete, will be filled with default value
+- **download_thread:** println prompt grammar is now proper
+
+### Revert
+- **download_thread:** default value is reverted back from 4 to 8
+
+### Version
+- bump to 0.4.6
+
+
 <a name="v0.4.5"></a>
 ## [v0.4.5] - 2021-09-20
 ### Version
@@ -200,7 +216,8 @@
 - **cli:** moved functions to method
 
 
-[Unreleased]: https://github.com/tigorlazuardi/ridit-rs/compare/v0.4.5...HEAD
+[Unreleased]: https://github.com/tigorlazuardi/ridit-rs/compare/v0.4.6...HEAD
+[v0.4.6]: https://github.com/tigorlazuardi/ridit-rs/compare/v0.4.5...v0.4.6
 [v0.4.5]: https://github.com/tigorlazuardi/ridit-rs/compare/v0.4.4...v0.4.5
 [v0.4.4]: https://github.com/tigorlazuardi/ridit-rs/compare/v0.4.3...v0.4.4
 [v0.4.3]: https://github.com/tigorlazuardi/ridit-rs/compare/v0.4.2...v0.4.3
