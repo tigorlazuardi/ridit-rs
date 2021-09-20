@@ -1,3 +1,4 @@
+use atty::Stream;
 use std::sync::Arc;
 
 use anyhow::Result;
@@ -12,7 +13,15 @@ pub async fn start(config: &Config) -> Result<()> {
 	let cfg = Arc::new(config.to_owned());
 	let repo = Repository::new(cfg.clone());
 
-	for op in repo.download(PrintOut::Bar).await.into_iter() {
+	let text: PrintOut;
+
+	if atty::is(Stream::Stdout) {
+		text = PrintOut::Bar;
+	} else {
+		text = PrintOut::Text;
+	}
+
+	for op in repo.download(text).await.into_iter() {
 		if let Err(err) = op {
 			println!("{:?}", err);
 		}

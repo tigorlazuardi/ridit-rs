@@ -756,6 +756,7 @@ name = "ridit"
 version = "0.4.7"
 dependencies = [
  "anyhow",
+ "atty",
  "directories",
  "imagesize",
  "linya",
