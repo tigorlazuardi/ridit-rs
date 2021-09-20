@@ -95,6 +95,14 @@ impl Repository {
 		subreddit: Subreddit,
 		display: PrintOut,
 	) -> Result<Vec<Result<DownloadMeta, Error>>> {
+		let print = || {
+			println!("[{}] downloading listing", subreddit.proper_name);
+		};
+		match display {
+			PrintOut::Bar => print(),
+			PrintOut::Text => print(),
+			_ => {}
+		}
 		let downloads = self.download_listing(&subreddit).await?;
 		Ok(self.download_images(downloads, subreddit, display).await)
 	}
@@ -137,7 +145,6 @@ impl Repository {
 			subreddit.proper_name, subreddit.sort
 		);
 
-		println!("[{}] fetching listing", subreddit.proper_name);
 		let retry_strategy = FixedInterval::from_millis(100).map(jitter).take(3);
 		let resp: Response = Retry::spawn(retry_strategy, || async {
 			let res = self.client.get(&listing_url).send().await?;
