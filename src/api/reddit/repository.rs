@@ -225,7 +225,11 @@ impl Repository {
 						download_location.display()
 					)
 				})?;
-			fs::remove_file(&download_location).await.with_context(|| {
+			let dir_path = std::env::temp_dir()
+				.join("ridit")
+				.join(&meta.subreddit_name)
+				.join(&meta.filename);
+			fs::remove_file(&dir_path).await.with_context(|| {
 				format!(
 					"failed to remove temp downloaded file {}",
 					download_location.display()
