@@ -46,13 +46,14 @@ static APP_USER_AGENT: &str = concat!(
 	"id.web.tigor.",
 	env!("CARGO_PKG_NAME"),
 	"/v",
-	env!("CARGO_PKG_VERSION")
+	env!("CARGO_PKG_VERSION"),
+	" (by /u/CrowFX)"
 );
 
 impl Repository {
 	pub fn new(config: Arc<Config>) -> Self {
 		let os = std::env::consts::OS;
-		let user_agent = os.to_string() + ":" + APP_USER_AGENT + " (by /u/CrowFX)";
+		let user_agent = os.to_string() + ":" + APP_USER_AGENT;
 		let client = reqwest::Client::builder()
 			.user_agent(user_agent)
 			.connect_timeout(Duration::from_secs(config.timeout.into()))
