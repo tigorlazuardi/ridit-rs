@@ -93,7 +93,7 @@ impl Default for Config {
 		Config {
 			focused_profile: "main".to_string(),
 			path: p,
-			download_threads: 4,
+			download_threads: 8,
 			timeout: 10,
 			settings: m,
 			subreddits: subs,
