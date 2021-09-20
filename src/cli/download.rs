@@ -17,6 +17,9 @@ pub enum Download {
 	/// Sets connect timeout (in seconds)
 	#[structopt(visible_aliases = &["ct", "connect"])]
 	ConnectTimeout { input: u32 },
+	/// Sets the download threads
+	#[structopt(visible_aliases = &["thr", "thread"])]
+	Threads { input: usize },
 }
 
 #[derive(StructOpt, Debug, Clone)]
@@ -30,6 +33,7 @@ impl Download {
 		Ok(match &self {
 			Self::Path { input } => Download::path(input, config).await?,
 			Self::ConnectTimeout { input } => Download::connect_timeout(*input, config).await?,
+			Self::Threads { input } => Download::threads(*input, config).await?,
 		})
 	}
 
@@ -45,6 +49,13 @@ impl Download {
 		config.timeout = input;
 		write_config(config).await?;
 		println!("timeout is set to {} seconds", input);
+		Ok(())
+	}
+
+	async fn threads(input: usize, config: &mut Config) -> Result<()> {
+		config.download_threads = input;
+		write_config(config).await?;
+		println!("download threads are set to {} seconds", input);
 		Ok(())
 	}
 }

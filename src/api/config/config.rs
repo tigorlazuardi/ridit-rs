@@ -21,6 +21,7 @@ pub struct Config {
 	/// Profile to set configurations to
 	pub focused_profile: String,
 	pub timeout: u32,
+	pub download_threads: usize,
 	pub path: PathBuf,
 	pub settings: Settings,
 	pub subreddits: Subreddits,
@@ -91,6 +92,7 @@ impl Default for Config {
 		Config {
 			focused_profile: "main".to_string(),
 			path: p,
+			download_threads: 4,
 			timeout: 10,
 			settings: m,
 			subreddits: subs,

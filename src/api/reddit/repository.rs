@@ -60,7 +60,7 @@ impl Repository {
 			.context("failed to create request client")
 			.unwrap();
 
-		let semaphore = Arc::new(Semaphore::new(8));
+		let semaphore = Arc::new(Semaphore::new(config.download_threads));
 		Self {
 			client: Arc::new(client),
 			config,
