@@ -17,6 +17,7 @@ pub type Subreddits = BTreeMap<String, Subreddit>;
 pub type Settings = BTreeMap<String, Configuration>;
 
 #[derive(Debug, Deserialize, Serialize, Clone)]
+#[serde(default)]
 pub struct Config {
 	/// Profile to set configurations to
 	pub focused_profile: String,
