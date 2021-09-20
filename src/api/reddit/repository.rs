@@ -9,6 +9,7 @@ use std::{
 use anyhow::{bail, Context, Error, Result};
 use imagesize::blob_size;
 
+use pad::PadStr;
 use reqwest::{header::RANGE, Client, Response};
 use tokio::{
 	fs::{self, File},
@@ -327,9 +328,10 @@ impl Repository {
 			.await
 			.context("cannot create file on tmp dir")?;
 		let noop = |_| {};
-		let prefix = format!(
-			"{:?} [{}] downloading {}",
-			meta.profile, meta.subreddit_name, meta.url
+		let prefix = prefix_gen(
+			&format!("{:?}", meta.profile),
+			&format!("[{}]", meta.subreddit_name),
+			&meta.url,
 		);
 		match display {
 			PrintOut::Bar => {
@@ -409,4 +411,8 @@ impl Repository {
 			None => Ok(false),
 		}
 	}
+}
+
+fn prefix_gen(profiles: &str, subreddit: &str, url: &str) -> String {
+	profiles.with_exact_width(15) + &subreddit.with_exact_width(23) + &url.with_exact_width(36)
 }
