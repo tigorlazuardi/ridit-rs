@@ -2,6 +2,23 @@
 ## [Unreleased]
 
 
+<a name="v0.4.4"></a>
+## [v0.4.4] - 2021-09-20
+### Feature
+- **config:** added proper_name in subreddit key
+- **config:** config now does not lowercase subreddit but instead checks for proper casing on adding subs
+
+### Fix
+- **cli:** added write config after selecting remove subreddit
+- **reddit:** removed unnecessary fields in listing for json deserializing
+- **reqwest:** reqwest now using rustls-tls instead of openssl for tls matching
+- **user_agent:** renamed user_agent to proper specification of reddit
+
+### Refactor
+- **listing:** renamed variable to not blatantly shadows usual convention in glance reading
+- **reddit:** now download meta and download operation result is passed to the top level function
+
+
 <a name="v0.4.3"></a>
 ## [v0.4.3] - 2021-09-15
 ### Feature
@@ -177,7 +194,8 @@
 - **cli:** moved functions to method
 
 
-[Unreleased]: https://github.com/tigorlazuardi/ridit-rs/compare/v0.4.3...HEAD
+[Unreleased]: https://github.com/tigorlazuardi/ridit-rs/compare/v0.4.4...HEAD
+[v0.4.4]: https://github.com/tigorlazuardi/ridit-rs/compare/v0.4.3...v0.4.4
 [v0.4.3]: https://github.com/tigorlazuardi/ridit-rs/compare/v0.4.2...v0.4.3
 [v0.4.2]: https://github.com/tigorlazuardi/ridit-rs/compare/v0.4.1...v0.4.2
 [v0.4.1]: https://github.com/tigorlazuardi/ridit-rs/compare/v0.4.0...v0.4.1
