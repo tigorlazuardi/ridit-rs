@@ -150,13 +150,12 @@ impl Repository {
 			)
 		})?;
 
-		let result: Listing = resp.json().await.with_context(|| {
-			format!(
-				"failed to deserialize json response body (unsupported body format) from: {}",
-				listing_url
-			)
-		})?;
-		Ok(result.into_download_metas(&self.config))
+		let listing: Listing = resp
+			.json()
+			.await
+			.with_context(|| format!("failed to deserialize json body from: {}", listing_url))?;
+
+		Ok(listing.into_download_metas(&self.config))
 	}
 
 	async fn download_image(
