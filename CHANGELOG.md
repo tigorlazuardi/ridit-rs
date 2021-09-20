@@ -2,6 +2,12 @@
 ## [Unreleased]
 
 
+<a name="v0.4.5"></a>
+## [v0.4.5] - 2021-09-20
+### Version
+- bump to 0.4.5 to match current git tag
+
+
 <a name="v0.4.4"></a>
 ## [v0.4.4] - 2021-09-20
 ### Feature
@@ -194,7 +200,8 @@
 - **cli:** moved functions to method
 
 
-[Unreleased]: https://github.com/tigorlazuardi/ridit-rs/compare/v0.4.4...HEAD
+[Unreleased]: https://github.com/tigorlazuardi/ridit-rs/compare/v0.4.5...HEAD
+[v0.4.5]: https://github.com/tigorlazuardi/ridit-rs/compare/v0.4.4...v0.4.5
 [v0.4.4]: https://github.com/tigorlazuardi/ridit-rs/compare/v0.4.3...v0.4.4
 [v0.4.3]: https://github.com/tigorlazuardi/ridit-rs/compare/v0.4.2...v0.4.3
 [v0.4.2]: https://github.com/tigorlazuardi/ridit-rs/compare/v0.4.1...v0.4.2
