@@ -2,6 +2,25 @@
 ## [Unreleased]
 
 
+<a name="v0.4.8"></a>
+## [v0.4.8] - 2021-09-20
+### Clean
+- **repository:** hardcoded username useragent now in static
+
+### Cleanup
+- **pkg:** removed pkg from app (unused codes)
+
+### Feature
+- **cargo.toml:** release profile optimized for binary size
+- **cli:** support for tty detection
+
+### Format
+- **cargo.toml:** format
+
+### Refactor
+- **reddit:** download listing text now dependend on Printout Enum
+
+
 <a name="v0.4.7"></a>
 ## [v0.4.7] - 2021-09-20
 ### Feat
@@ -228,7 +247,8 @@
 - **cli:** moved functions to method
 
 
-[Unreleased]: https://github.com/tigorlazuardi/ridit-rs/compare/v0.4.7...HEAD
+[Unreleased]: https://github.com/tigorlazuardi/ridit-rs/compare/v0.4.8...HEAD
+[v0.4.8]: https://github.com/tigorlazuardi/ridit-rs/compare/v0.4.7...v0.4.8
 [v0.4.7]: https://github.com/tigorlazuardi/ridit-rs/compare/v0.4.6...v0.4.7
 [v0.4.6]: https://github.com/tigorlazuardi/ridit-rs/compare/v0.4.5...v0.4.6
 [v0.4.5]: https://github.com/tigorlazuardi/ridit-rs/compare/v0.4.4...v0.4.5
