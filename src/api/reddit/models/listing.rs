@@ -19,9 +19,12 @@ impl Listing {
 			}
 
 			let sub_name = &data.subreddit;
-			let sub = config.subreddits.get(sub_name).unwrap_or_else(|| {
-				panic!("subreddit '{}' does not exist in configuration", sub_name)
-			});
+			let sub = config
+				.subreddits
+				.get(&sub_name.to_lowercase())
+				.unwrap_or_else(|| {
+					panic!("subreddit '{}' does not exist in configuration", sub_name)
+				});
 
 			if data.over_18 && !sub.nsfw {
 				continue;

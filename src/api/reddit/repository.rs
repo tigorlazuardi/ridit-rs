@@ -70,12 +70,10 @@ impl Repository {
 	pub async fn download(&self, display: PrintOut) -> Vec<Result<DownloadMeta, Error>> {
 		let mut handlers = Vec::new();
 
-		for (name, subreddit) in self.config.subreddits.iter() {
+		for (_, subreddit) in &self.config.subreddits {
 			let this = self.clone();
-			let name = name.clone();
 			let subreddit = subreddit.clone();
-			let handle =
-				tokio::spawn(async move { this.exec_download(&name, subreddit, display).await });
+			let handle = tokio::spawn(async move { this.exec_download(subreddit, display).await });
 			handlers.push(handle);
 		}
 		let mut v = Vec::new();
@@ -91,11 +89,10 @@ impl Repository {
 
 	async fn exec_download(
 		&self,
-		name: &str,
 		subreddit: Subreddit,
 		display: PrintOut,
 	) -> Result<Vec<Result<DownloadMeta, Error>>> {
-		let downloads = self.download_listing(name, subreddit).await?;
+		let downloads = self.download_listing(&subreddit).await?;
 		Ok(self.download_images(downloads, subreddit, display).await)
 	}
 
@@ -114,6 +111,7 @@ impl Repository {
 			}
 			let this = self.clone();
 			let sem = self.semaphore.clone();
+			let subreddit = subreddit.clone();
 			let handle = tokio::spawn(async move {
 				// release semaphore lock on end of scope
 				let _x = sem.acquire().await.unwrap();
@@ -130,17 +128,13 @@ impl Repository {
 		v
 	}
 
-	async fn download_listing(
-		&self,
-		name: &str,
-		subreddit: Subreddit,
-	) -> Result<Vec<DownloadMeta>> {
+	async fn download_listing(&self, subreddit: &Subreddit) -> Result<Vec<DownloadMeta>> {
 		let listing_url = format!(
 			"https://reddit.com/r/{}/{}.json?limit=100",
-			name, subreddit.sort
+			subreddit.proper_name, subreddit.sort
 		);
 
-		println!("[{}] fetching listing", name);
+		println!("[{}] fetching listing", subreddit.proper_name);
 		let retry_strategy = FixedInterval::from_millis(100).map(jitter).take(3);
 		let resp: Response = Retry::spawn(retry_strategy, || async {
 			let res = self.client.get(&listing_url).send().await?;

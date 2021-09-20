@@ -53,19 +53,21 @@ impl Default for MinimumSize {
 	}
 }
 
-#[derive(Deserialize, Debug, Clone, Copy, Serialize)]
+#[derive(Deserialize, Debug, Clone, Serialize)]
 pub struct Subreddit {
+	pub proper_name: String,
 	pub nsfw: bool,
 	pub download_first: bool,
 	pub sort: Sort,
 }
 
-impl Default for Subreddit {
-	fn default() -> Self {
+impl Subreddit {
+	pub fn new_default(proper_name: String) -> Subreddit {
 		Subreddit {
+			proper_name,
 			nsfw: true,
 			download_first: false,
-			sort: Sort::default(),
+			sort: Sort::New,
 		}
 	}
 }

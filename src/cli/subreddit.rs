@@ -42,7 +42,7 @@ impl Subreddit {
 		if add.input.len() < 1 {
 			bail!("no new subreddits specified")
 		}
-		let mut conf = SubredditConf::default();
+		let mut conf = SubredditConf::new_default("".to_string());
 		conf.nsfw = !add.no_nsfw;
 		conf.download_first = add.download_first;
 		conf.sort = add.sort;
@@ -64,7 +64,9 @@ impl Subreddit {
 			let (name, join_result) = handler.await.unwrap();
 			match join_result {
 				Ok(b) if b => {
-					config.subreddits.insert(name.to_lowercase(), conf);
+					let mut conf = conf.clone();
+					conf.proper_name = name.clone();
+					config.subreddits.insert(name.to_lowercase(), conf.clone());
 					result.push(name);
 				}
 				Ok(_) => {

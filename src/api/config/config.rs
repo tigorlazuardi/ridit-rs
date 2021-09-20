@@ -60,9 +60,14 @@ impl Default for Config {
 		let mut m: BTreeMap<String, Configuration> = BTreeMap::new();
 		m.insert("main".to_string(), Configuration::default());
 		let mut subs: Subreddits = BTreeMap::new();
-		subs.insert("wallpaper".to_string(), Subreddit::default());
-		subs.insert("wallpapers".to_string(), Subreddit::default());
-		subs.insert("MobileWallpaper".to_string(), Subreddit::default());
+		let wallpaper = "wallpaper".to_string();
+		let wallpapers = "wallpapers".to_string();
+		subs.insert(wallpaper.clone(), Subreddit::new_default(wallpaper));
+		subs.insert(wallpapers.clone(), Subreddit::new_default(wallpapers));
+		subs.insert(
+			"mobilewallpaper".to_string(),
+			Subreddit::new_default(String::from("MobileWallpaper")),
+		);
 		let mobile_config = Configuration {
 			aspect_ratio: AspectRatio {
 				enable: true,
