@@ -225,6 +225,12 @@ impl Repository {
 						download_location.display()
 					)
 				})?;
+			fs::remove_file(&download_location).await.with_context(|| {
+				format!(
+					"failed to remove temp downloaded file {}",
+					download_location.display()
+				)
+			})?;
 		}
 
 		Ok(())
