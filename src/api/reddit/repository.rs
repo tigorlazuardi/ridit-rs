@@ -43,16 +43,18 @@ pub enum PrintOut {
 }
 
 static APP_USER_AGENT: &str = concat!(
+	"id.web.tigor.",
 	env!("CARGO_PKG_NAME"),
-	"/",
-	env!("CARGO_PKG_VERSION"),
-	"(+https://github.com/tigorlazuardi/ridit-rs)"
+	"/v",
+	env!("CARGO_PKG_VERSION")
 );
 
 impl Repository {
 	pub fn new(config: Arc<Config>) -> Self {
+		let os = std::env::consts::OS;
+		let user_agent = os.to_string() + ":" + APP_USER_AGENT + " (by /u/CrowFX)";
 		let client = reqwest::Client::builder()
-			.user_agent(APP_USER_AGENT)
+			.user_agent(user_agent)
 			.connect_timeout(Duration::from_secs(config.timeout.into()))
 			.build()
 			.context("failed to create request client")
