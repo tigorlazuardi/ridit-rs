@@ -49,12 +49,12 @@ impl Subreddit {
 		let mut handlers = Vec::new();
 		for name in &add.input {
 			let exist = config.subreddits.get(name).is_some();
-			let name = name.to_owned();
+			let mut name = name.to_owned();
 			let handler = tokio::spawn(async move {
 				if exist {
 					return (name, Ok::<bool, Error>(true));
 				}
-				let result = Repository::subreddit_exist(&name).await;
+				let result = Repository::subreddit_exist(&mut name).await;
 				(name, result)
 			});
 			handlers.push(handler);

@@ -62,6 +62,7 @@ impl Default for Config {
 		let mut subs: Subreddits = BTreeMap::new();
 		subs.insert("wallpaper".to_string(), Subreddit::default());
 		subs.insert("wallpapers".to_string(), Subreddit::default());
+		subs.insert("MobileWallpaper".to_string(), Subreddit::default());
 		let mobile_config = Configuration {
 			aspect_ratio: AspectRatio {
 				enable: true,

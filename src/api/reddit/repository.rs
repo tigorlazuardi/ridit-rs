@@ -371,7 +371,8 @@ impl Repository {
 	}
 
 	/// Checks to reddit if subreddit exists
-	pub async fn subreddit_exist(subreddit: &str) -> Result<bool> {
+	/// Also mutates the given subreddit name to proper casing.
+	pub async fn subreddit_exist(subreddit: &mut String) -> Result<bool> {
 		let url = format!("https://reddit.com/r/{}.json", subreddit);
 		let retry_strategy = FixedInterval::from_millis(100).map(jitter).take(3);
 		let resp: Response = Retry::spawn(retry_strategy, || async {
@@ -386,6 +387,13 @@ impl Repository {
 			.await
 			.with_context(|| format!("failed to deserialize json body from: {}", url))?;
 
-		Ok(listing.data.children.len() > 0)
+		match listing.data.children.get(0) {
+			Some(v) => {
+				subreddit.clear();
+				subreddit.push_str(&v.data.subreddit);
+				Ok(true)
+			}
+			None => Ok(false),
+		}
 	}
 }
