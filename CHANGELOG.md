@@ -2,6 +2,18 @@
 ## [Unreleased]
 
 
+<a name="v0.4.7"></a>
+## [v0.4.7] - 2021-09-20
+### Feat
+- **download:** images in temp folder are deleted upon successful copy
+
+### Fix
+- **download:** removed images should be temp file NOT the downloaded file
+
+### Version
+- bump to 0.4.7
+
+
 <a name="v0.4.6"></a>
 ## [v0.4.6] - 2021-09-20
 ### Feature
@@ -216,7 +228,8 @@
 - **cli:** moved functions to method
 
 
-[Unreleased]: https://github.com/tigorlazuardi/ridit-rs/compare/v0.4.6...HEAD
+[Unreleased]: https://github.com/tigorlazuardi/ridit-rs/compare/v0.4.7...HEAD
+[v0.4.7]: https://github.com/tigorlazuardi/ridit-rs/compare/v0.4.6...v0.4.7
 [v0.4.6]: https://github.com/tigorlazuardi/ridit-rs/compare/v0.4.5...v0.4.6
 [v0.4.5]: https://github.com/tigorlazuardi/ridit-rs/compare/v0.4.4...v0.4.5
 [v0.4.4]: https://github.com/tigorlazuardi/ridit-rs/compare/v0.4.3...v0.4.4
