@@ -91,6 +91,7 @@ impl Subreddit {
 				None => println!("subreddit {} does not exist in configuration", name),
 			}
 		}
+		write_config(config).await?;
 		println!("removed subreddits: {:?}", result);
 		Ok(())
 	}
