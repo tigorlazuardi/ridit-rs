@@ -12,6 +12,8 @@ use anyhow::{bail, Context, Error, Result};
 
 use crate::api::config::configuration::Subreddit as SubredditConf;
 
+use super::Format;
+
 #[derive(Debug, StructOpt, Clone)]
 pub enum Subreddit {
 	/// Add subreddit(s) to subscribe
@@ -26,7 +28,7 @@ pub enum Subreddit {
 	Remove(InputOnly),
 	/// List added subreddits
 	#[structopt(visible_alias = "ls")]
-	List(ListOptions),
+	List(Format),
 }
 
 impl Subreddit {
@@ -98,8 +100,8 @@ impl Subreddit {
 		Ok(())
 	}
 
-	async fn list(opts: &ListOptions, config: &Config) -> Result<()> {
-		match opts.out_format {
+	async fn list(opts: &Format, config: &Config) -> Result<()> {
+		match opts.format {
 			OutFormat::JSON => {
 				let val = serde_json::to_string_pretty(&config.subreddits)
 					.context("failed to serialize subreddits to json format")?;
@@ -145,13 +147,6 @@ pub struct AddSubreddit {
 #[derive(Debug, StructOpt, Clone)]
 pub struct InputOnly {
 	input: Vec<String>,
-}
-
-#[derive(Debug, StructOpt, Clone)]
-pub struct ListOptions {
-	/// Set output format. supported value: json, toml
-	#[structopt(short, long, default_value = "toml")]
-	out_format: OutFormat,
 }
 
 #[derive(Clone, Copy, Debug)]
