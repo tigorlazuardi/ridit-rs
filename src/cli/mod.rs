@@ -10,7 +10,7 @@ use structopt::{
 	StructOpt,
 };
 
-use crate::api::config::config::read_config;
+use crate::{api::config::config::read_config, server};
 
 #[derive(Debug, StructOpt, Clone)]
 #[structopt(name = "ridit", about = "Reddit image downloader written in rust", version = crate_version!(), author = crate_authors!())]
@@ -29,7 +29,10 @@ impl Opt {
 			SubCommand::Download(dl) => dl.handle(&mut config).await?,
 			SubCommand::Start => start::start(&config).await?,
 			SubCommand::Print(p) => p.print(&config)?,
-			SubCommand::Server => {}
+			SubCommand::Server => {
+				println!("grpc server is running on 9090");
+				server::start_server().await?
+			}
 		}
 		Ok(())
 	}
