@@ -3,10 +3,6 @@ name = 'ridit'
 version = '0.4.7'
 edition = '2018'
 build = 'src/build.rs'
-[profile.release]
-opt-level = 's'
-lto = true
-codegen-units = 1
 
 [dependencies]
 structopt = '0.3'
