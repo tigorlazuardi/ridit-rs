@@ -34,6 +34,10 @@ impl MinimumSize {
 		let cfg = config.get_mut_configuration()?;
 		cfg.minimum_size.enable = true;
 		write_config(config).await?;
+		println!(
+			"minimum size check enabled for '{}'",
+			config.focused_profile
+		);
 		Ok(())
 	}
 
@@ -41,6 +45,10 @@ impl MinimumSize {
 		let cfg = config.get_mut_configuration()?;
 		cfg.minimum_size.enable = false;
 		write_config(config).await?;
+		println!(
+			"minimum size check disabled for '{}'",
+			config.focused_profile
+		);
 		Ok(())
 	}
 
@@ -48,6 +56,10 @@ impl MinimumSize {
 		let cfg = config.get_mut_configuration()?;
 		cfg.minimum_size.height = input;
 		write_config(config).await?;
+		println!(
+			"minimum size height is set to '{}' for '{}'",
+			input, config.focused_profile
+		);
 		Ok(())
 	}
 
@@ -55,6 +67,10 @@ impl MinimumSize {
 		let cfg = config.get_mut_configuration()?;
 		cfg.minimum_size.width = input;
 		write_config(config).await?;
+		println!(
+			"minimum size width is set to '{}' for '{}'",
+			input, config.focused_profile
+		);
 		Ok(())
 	}
 }
