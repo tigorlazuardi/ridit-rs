@@ -1,14 +1,88 @@
 syntax = "proto3";
-package helloworld;
+package ridit;
 
-service Greeter {
-	rpc SayHello(HelloRequest) returns (HelloReply);
+service Ridit {
+	rpc State(EmptyMsg) returns (State);
+	rpc TriggerDownload(EmptyMsg) returns (stream DownloadStatus);
 }
 
-message HelloRequest {
+message EmptyMsg {}
+
+message State {
+	uint32 status = 1;
+	string message = 2;
+	string next_download_time = 3;
+}
+
+message DownloadStatus {
+	string subreddit = 1;
+	uint32 download_size = 2;
+	uint32 downloaded = 3; 
+	string filename = 4;
+	string path = 5;
+	string profile = 6;
+}
+
+service Profile {
+	// updates or inserts a profile. Existing profile will have given fields updated and keep the rest the same.
+	// When adding new profile, missing fields uses default values.
+	rpc Upsert(ProfileUpsert) returns (ConfigReply);
+	// removes profile
+	rpc Remove(ProfileRemove) returns (ConfigReply);
+	// list profiles
+	rpc List(EmptyMsg) returns (ProfileListMap);
+}
+
+message ProfileUpsert {
+	required string name = 1;
+	optional AspectRatioOptional aspect_ratio = 2;
+	optional MinimumSizeOptional minimum_size = 3;
+}
+
+message ProfileData {
+	AspectRatio aspect_ratio = 1;
+	MinimumSize minimum_size = 2;
+}
+
+message ProfileListMap {
+	map<string, ProfileData> value = 1;
+}
+
+message ProfileRemove {
 	string name = 1;
 }
 
-message HelloReply {
-	string message = 1;
+message ConfigReply {
+	enum Result {
+		ok = 0;
+		error = 1;
+	}
+	Result message = 1;
+	string error = 2;
+}
+
+message AspectRatio {
+	bool enable = 1;
+	uint32 height = 2;
+	uint32 width = 3;
+	float range = 4;
+}
+
+message MinimumSize {
+	bool enable = 1;
+	uint32 height = 2;
+	uint32 width = 3;
+}
+
+message AspectRatioOptional {
+	optional bool enable = 1;
+	optional uint32 height = 2;
+	optional uint32 width = 3;
+	optional float range = 4;
+}
+
+message MinimumSizeOptional {
+	optional bool enable = 1;
+	optional uint32 height = 2;
+	optional uint32 width = 3;
 }
