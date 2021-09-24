@@ -38,6 +38,10 @@ impl AspectRatio {
 		let cfg = config.get_mut_configuration()?;
 		cfg.aspect_ratio.enable = true;
 		write_config(config).await?;
+		println!(
+			"aspect ratio check enabled for '{}'",
+			config.focused_profile
+		);
 		Ok(())
 	}
 
@@ -45,6 +49,10 @@ impl AspectRatio {
 		let cfg = config.get_mut_configuration()?;
 		cfg.aspect_ratio.enable = false;
 		write_config(config).await?;
+		println!(
+			"aspect ratio check disabled for '{}'",
+			config.focused_profile
+		);
 		Ok(())
 	}
 
@@ -52,6 +60,10 @@ impl AspectRatio {
 		let cfg = config.get_mut_configuration()?;
 		cfg.aspect_ratio.height = input;
 		write_config(config).await?;
+		println!(
+			"aspect ratio height is set to '{}' for '{}'",
+			input, config.focused_profile
+		);
 		Ok(())
 	}
 
@@ -59,6 +71,10 @@ impl AspectRatio {
 		let cfg = config.get_mut_configuration()?;
 		cfg.aspect_ratio.width = input;
 		write_config(config).await?;
+		println!(
+			"aspect ratio width is set to '{}' for '{}'",
+			input, config.focused_profile
+		);
 		Ok(())
 	}
 
@@ -66,6 +82,10 @@ impl AspectRatio {
 		let cfg = config.get_mut_configuration()?;
 		cfg.aspect_ratio.range = input;
 		write_config(config).await?;
+		println!(
+			"aspect ratio range is set to '{}' for '{}'",
+			input, config.focused_profile
+		);
 		Ok(())
 	}
 }
