@@ -9,7 +9,6 @@ use std::{
 use anyhow::{bail, Context, Error, Result};
 use imagesize::blob_size;
 
-use pad::PadStr;
 use reqwest::{header::RANGE, Client, Response};
 use tokio::{
 	fs::{self, File},
@@ -71,7 +70,7 @@ impl Repository {
 		}
 	}
 
-	pub async fn download(&self, display: PrintOut) -> Vec<Result<DownloadMeta, Error>> {
+	pub async fn download(&self, display: PrintOut) -> Vec<(DownloadMeta, Result<(), Error>)> {
 		let mut handlers = Vec::new();
 
 		for (_, subreddit) in &self.config.subreddits {
@@ -95,14 +94,13 @@ impl Repository {
 		&self,
 		subreddit: Subreddit,
 		display: PrintOut,
-	) -> Result<Vec<Result<DownloadMeta, Error>>> {
+	) -> Result<Vec<(DownloadMeta, Result<(), Error>)>> {
 		let print = || {
-			println!("[{}] downloading listing", subreddit.proper_name);
+			println!("{} downloading listing", subreddit.padded_proper_name());
 		};
 		match display {
-			PrintOut::Bar => print(),
-			PrintOut::Text => print(),
-			_ => {}
+			PrintOut::None => {}
+			_ => print(),
 		}
 		let downloads = self.download_listing(&subreddit).await?;
 		Ok(self.download_images(downloads, subreddit, display).await)
@@ -113,7 +111,7 @@ impl Repository {
 		downloads: Vec<DownloadMeta>,
 		subreddit: Subreddit,
 		display: PrintOut,
-	) -> Vec<Result<DownloadMeta, Error>> {
+	) -> Vec<(DownloadMeta, Result<(), Error>)> {
 		let mut handlers = Vec::new();
 		'meta: for mut meta in downloads.into_iter() {
 			for profile in &meta.profile {
@@ -127,9 +125,8 @@ impl Repository {
 			let handle = tokio::spawn(async move {
 				// release semaphore lock on end of scope
 				let _x = sem.acquire().await.unwrap();
-				this.download_image(&mut meta, subreddit, display)
-					.await
-					.map(|_| meta)
+				let op = this.download_image(&mut meta, subreddit, display).await;
+				(meta, op)
 			});
 			handlers.push(handle);
 		}
@@ -328,10 +325,11 @@ impl Repository {
 			.await
 			.context("cannot create file on tmp dir")?;
 		let noop = |_| {};
-		let prefix = prefix_gen(
-			&format!("{:?}", meta.profile),
-			&format!("[{}]", meta.subreddit_name),
-			&meta.url,
+		let prefix = format!(
+			"{} {} {}",
+			meta.padded_profiles(),
+			meta.padded_subreddit_name(),
+			&meta.url
 		);
 		match display {
 			PrintOut::Bar => {
@@ -411,8 +409,4 @@ impl Repository {
 			None => Ok(false),
 		}
 	}
-}
-
-fn prefix_gen(profiles: &str, subreddit: &str, url: &str) -> String {
-	profiles.with_exact_width(15) + &subreddit.with_exact_width(23) + &url.with_exact_width(36)
 }

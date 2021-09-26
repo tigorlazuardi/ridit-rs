@@ -1,5 +1,7 @@
 use std::path::{Path, PathBuf};
 
+use pad::PadStr;
+
 use crate::api::config::configuration::Configuration;
 
 pub struct DownloadMeta {
@@ -44,5 +46,13 @@ impl DownloadMeta {
 		}
 		self.image_width >= config.minimum_size.width
 			&& self.image_height >= config.minimum_size.height
+	}
+
+	pub fn padded_subreddit_name(&self) -> String {
+		("[".to_string() + &self.subreddit_name + "]").pad_to_width(22)
+	}
+
+	pub fn padded_profiles(&self) -> String {
+		format!("{:?}", self.profile).pad_to_width(20)
 	}
 }

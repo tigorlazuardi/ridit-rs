@@ -21,9 +21,14 @@ pub async fn start(config: &Config) -> Result<()> {
 		text = PrintOut::Text;
 	}
 
-	for op in repo.download(text).await.into_iter() {
-		if let Err(err) = op {
-			println!("{:?}", err);
+	for (meta, operation) in repo.download(text).await.into_iter() {
+		if let Err(err) = operation {
+			println!(
+				"{} {} {}",
+				meta.padded_profiles(),
+				meta.padded_subreddit_name(),
+				err
+			)
 		}
 	}
 	Ok(())
