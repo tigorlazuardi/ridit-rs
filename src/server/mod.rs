@@ -14,7 +14,7 @@ use crate::api::config::config::Config;
 use self::ridit::RiditController;
 
 pub async fn start_server(config: Config) -> anyhow::Result<()> {
-	let addr = "127.0.0.1:9876".parse()?;
+	let addr = format!("127.0.0.1:{}", config.port).parse()?;
 
 	let config = Arc::new(Mutex::new(config));
 	let ridit_server = RiditServer::new(RiditController::new(config.clone()));

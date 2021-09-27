@@ -22,6 +22,7 @@ pub struct Config {
 	/// Profile to set configurations to
 	pub focused_profile: String,
 	pub timeout: u32,
+	pub port: u32,
 	pub download_threads: usize,
 	pub path: PathBuf,
 	pub settings: Settings,
@@ -92,6 +93,7 @@ impl Default for Config {
 			.join("ridit");
 		Config {
 			focused_profile: "main".to_string(),
+			port: 9876,
 			path: p,
 			download_threads: 8,
 			timeout: 10,

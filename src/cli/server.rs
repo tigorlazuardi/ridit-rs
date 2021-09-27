@@ -17,7 +17,7 @@ impl ServerCMD {
 	}
 
 	async fn start(&self, config: Config) -> Result<()> {
-		println!("grpc server is running on 9876");
+		println!("grpc server is running on {}", config.port);
 		server::start_server(config).await?;
 		Ok(())
 	}
