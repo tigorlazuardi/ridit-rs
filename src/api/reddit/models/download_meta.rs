@@ -3,6 +3,7 @@ use std::path::{Path, PathBuf};
 use pad::PadStr;
 
 use crate::api::config::configuration::Configuration;
+use crate::server::ridit::ridit_proto::DownloadMeta as ProtoDownloadMeta;
 
 pub struct DownloadMeta {
 	pub url: String,
@@ -15,6 +16,23 @@ pub struct DownloadMeta {
 	pub title: String,
 	pub author: String,
 	pub profile: Vec<String>,
+}
+
+impl From<DownloadMeta> for ProtoDownloadMeta {
+	fn from(dm: DownloadMeta) -> Self {
+		ProtoDownloadMeta {
+			url: dm.url,
+			subreddit_name: dm.subreddit_name,
+			image_height: dm.image_height as u32,
+			image_width: dm.image_width as u32,
+			post_link: dm.post_link,
+			nsfw: dm.nsfw,
+			filename: dm.filename,
+			title: dm.title,
+			author: dm.author,
+			profile: dm.profile,
+		}
+	}
 }
 
 impl DownloadMeta {
