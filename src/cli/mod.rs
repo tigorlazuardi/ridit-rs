@@ -40,7 +40,7 @@ impl Opt {
 			SubCommand::Download(dl) => dl.handle(&mut config).await?,
 			SubCommand::Start => start::start(&config).await?,
 			SubCommand::Print(p) => p.print(&config)?,
-			SubCommand::Server(cmd) => cmd.handle(&config).await?,
+			SubCommand::Server(cmd) => cmd.handle(config).await?,
 		}
 		Ok(())
 	}

@@ -9,16 +9,16 @@ pub enum ServerCMD {
 }
 
 impl ServerCMD {
-	pub async fn handle(&self, config: &Config) -> Result<()> {
+	pub async fn handle(&self, config: Config) -> Result<()> {
 		match self {
 			ServerCMD::Start => self.start(config).await?,
 		}
 		Ok(())
 	}
 
-	async fn start(&self, _: &Config) -> Result<()> {
-		println!("grpc server is running on 9090");
-		server::start_server().await?;
+	async fn start(&self, config: Config) -> Result<()> {
+		println!("grpc server is running on 9876");
+		server::start_server(config).await?;
 		Ok(())
 	}
 }

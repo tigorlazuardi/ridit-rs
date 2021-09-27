@@ -16,6 +16,8 @@ atty = '0.2'
 pad = '0.1.6'
 tonic = '0.5'
 prost = '0.8'
+tokio-stream = '0.1'
+chrono = '0.4'
 
 [dependencies.anyhow]
 version = '1'
