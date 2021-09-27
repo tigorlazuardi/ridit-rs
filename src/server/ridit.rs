@@ -15,16 +15,30 @@ use ridit_proto::{AppState, DownloadStatus, EmptyMsg};
 use tokio_stream::wrappers::ReceiverStream;
 use tonic::{Request, Response, Status};
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct RiditController {
 	config: Arc<Mutex<Config>>,
+	state: Arc<Mutex<State>>,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct State {
 	pub status: u32,
 	pub message: String,
 	pub next_download_time: DateTime<Local>,
+}
+
+impl Default for State {
+	fn default() -> Self {
+		State {
+			status: 0,
+			message: "standby".to_string(),
+			next_download_time: Local::now()
+				.add(Duration::minutes(1))
+				.with_second(0)
+				.unwrap(),
+		}
+	}
 }
 
 impl From<State> for AppState {
@@ -41,24 +55,18 @@ impl From<State> for AppState {
 
 impl RiditController {
 	pub fn new(config: Arc<Mutex<Config>>) -> RiditController {
-		RiditController { config }
+		RiditController {
+			config,
+			state: Arc::new(Mutex::new(State::default())),
+		}
 	}
 }
 
 #[tonic::async_trait]
 impl Ridit for RiditController {
-	async fn state(&self, _request: Request<EmptyMsg>) -> Result<Response<AppState>, Status> {
-		Ok(Response::new(
-			State {
-				status: 0,
-				message: "healthy".to_string(),
-				next_download_time: Local::now()
-					.add(Duration::minutes(1))
-					.with_second(0)
-					.unwrap(),
-			}
-			.into(),
-		))
+	async fn state(&self, _: Request<EmptyMsg>) -> Result<Response<AppState>, Status> {
+		let s = (*self.state.lock().unwrap()).clone();
+		Ok(Response::new(s.into()))
 	}
 
 	type TriggerDownloadStream = ReceiverStream<Result<DownloadStatus, Status>>;
