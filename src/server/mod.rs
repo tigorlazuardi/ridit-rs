@@ -1,7 +1,3 @@
-pub mod hello_world {
-	tonic::include_proto!("helloworld");
-}
-
 pub mod ridit;
 
 use std::sync::{Arc, Mutex};
