@@ -37,7 +37,8 @@ impl From<DownloadMeta> for ProtoDownloadMeta {
 
 impl DownloadMeta {
 	pub fn get_file_location<P: AsRef<Path>>(&self, base_location: P) -> PathBuf {
-		Path::new(base_location.as_ref())
+		base_location
+			.as_ref()
 			.join(&self.subreddit_name)
 			.join(&self.filename)
 			.to_path_buf()
