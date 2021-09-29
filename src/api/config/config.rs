@@ -10,7 +10,10 @@ use dirs::home_dir;
 use serde::{Deserialize, Serialize};
 use tokio::fs;
 
-use super::configuration::{AspectRatio, Configuration, MinimumSize, Subreddit};
+use super::{
+	configuration::{AspectRatio, Configuration, MinimumSize, Subreddit},
+	server::ServerConfig,
+};
 
 pub static CONFIG_FILENAME: &str = "ridit.toml";
 
@@ -23,9 +26,9 @@ pub struct Config {
 	/// Profile to set configurations to
 	pub focused_profile: String,
 	pub timeout: u32,
-	pub port: u32,
 	pub download_threads: usize,
 	pub path: PathBuf,
+	pub server: ServerConfig,
 	pub settings: Settings,
 	pub subreddits: Subreddits,
 }
@@ -98,12 +101,12 @@ impl Default for Config {
 		};
 		Config {
 			focused_profile: "main".to_string(),
-			port: 9876,
 			path: p,
 			download_threads: 8,
 			timeout: 10,
 			settings: m,
 			subreddits: subs,
+			server: ServerConfig::default(),
 		}
 	}
 }

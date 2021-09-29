@@ -1,6 +1,9 @@
 pub mod ridit;
 
-use std::sync::{Arc, Mutex};
+use std::{
+	net::SocketAddr,
+	sync::{Arc, Mutex},
+};
 
 use ridit::ridit_proto::ridit_server::RiditServer;
 use tonic::transport::Server;
@@ -10,7 +13,7 @@ use crate::api::config::config::Config;
 use self::ridit::RiditController;
 
 pub async fn start_server(config: Config) -> anyhow::Result<()> {
-	let addr = format!("127.0.0.1:{}", config.port).parse()?;
+	let addr = SocketAddr::new(config.server.ip, config.server.port);
 
 	let config = Arc::new(Mutex::new(config));
 	let ridit_server = RiditServer::new(RiditController::new(config.clone()));
