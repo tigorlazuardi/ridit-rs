@@ -15,7 +15,6 @@ use crate::api::{
 use fasthash::city::Hash64;
 use fasthash::RandomState;
 use linya::{Bar, Progress};
-use pad::PadStr;
 
 /// Start downloading once
 pub async fn start(config: &Config) -> Result<()> {
@@ -73,15 +72,10 @@ async fn display_bar(mut rx: UnboundedReceiver<DownloadStatus>) {
 		if let Some(bar) = bars.get(&status.url) {
 			mpb.inc_and_draw(bar, status.chunk_length.try_into().unwrap());
 		} else {
-			let profiles = format!("{:?}", status.profiles).pad_to_width(23);
-			let subreddit_name = ("[".to_string() + &status.subreddit_name + "]").pad_to_width(23);
-			let label = format!(
-				"{} {} {}",
-				profiles,
-				subreddit_name,
-				status.url.with_exact_width(35)
+			let bar = mpb.bar(
+				status.download_length.try_into().unwrap(),
+				status.cli_label(),
 			);
-			let bar = mpb.bar(status.download_length.try_into().unwrap(), label);
 			bars.insert(status.url.to_owned(), bar);
 		};
 	}
