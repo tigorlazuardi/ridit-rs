@@ -1,5 +1,6 @@
 pub mod api;
 pub mod cli;
+pub mod server;
 
 use anyhow::Result;
 use structopt::StructOpt;

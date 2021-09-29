@@ -1,5 +1,6 @@
 use std::{convert::Infallible, default::Default, fmt::Display, str::FromStr};
 
+use pad::PadStr;
 use serde::{Deserialize, Serialize};
 
 #[derive(Deserialize, Debug, Clone, Serialize)]
@@ -69,6 +70,10 @@ impl Subreddit {
 			download_first: false,
 			sort: Sort::New,
 		}
+	}
+
+	pub fn padded_proper_name(&self) -> String {
+		("[".to_string() + &self.proper_name + "]").pad_to_width(23)
 	}
 }
 

@@ -4,8 +4,6 @@ use structopt::StructOpt;
 
 use crate::api::config::config::{write_config, Config};
 
-use super::subreddit::OutFormat;
-
 #[derive(StructOpt, Debug, Clone)]
 pub enum Download {
 	/// Sets download path
@@ -20,12 +18,6 @@ pub enum Download {
 	/// Sets the download threads
 	#[structopt(visible_aliases = &["thr", "thread"])]
 	Threads { input: usize },
-}
-
-#[derive(StructOpt, Debug, Clone)]
-pub struct PrintOpts {
-	#[structopt(long, short, default_value = "toml")]
-	pub out_format: OutFormat,
 }
 
 impl Download {

@@ -1,6 +1,10 @@
 use std::path::{Path, PathBuf};
 
+use pad::PadStr;
+
 use crate::api::config::configuration::Configuration;
+
+use super::download_status::DownloadStatus;
 
 pub struct DownloadMeta {
 	pub url: String,
@@ -17,7 +21,8 @@ pub struct DownloadMeta {
 
 impl DownloadMeta {
 	pub fn get_file_location<P: AsRef<Path>>(&self, base_location: P) -> PathBuf {
-		Path::new(base_location.as_ref())
+		base_location
+			.as_ref()
 			.join(&self.subreddit_name)
 			.join(&self.filename)
 			.to_path_buf()
@@ -44,5 +49,23 @@ impl DownloadMeta {
 		}
 		self.image_width >= config.minimum_size.width
 			&& self.image_height >= config.minimum_size.height
+	}
+
+	pub fn padded_subreddit_name(&self) -> String {
+		("[".to_string() + &self.subreddit_name + "]").pad_to_width(23)
+	}
+
+	pub fn padded_profiles(&self) -> String {
+		format!("{:?}", self.profile).pad_to_width(23)
+	}
+
+	pub fn as_download_status(&self, download_length: u64, chunk_length: u64) -> DownloadStatus {
+		DownloadStatus::new(
+			self.subreddit_name.to_owned(),
+			self.profile.to_owned(),
+			download_length,
+			chunk_length,
+			self.url.to_owned(),
+		)
 	}
 }

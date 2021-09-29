@@ -6,10 +6,14 @@ use std::{
 
 use anyhow::{Context, Result};
 use directories::{ProjectDirs, UserDirs};
+use dirs::home_dir;
 use serde::{Deserialize, Serialize};
 use tokio::fs;
 
-use super::configuration::{AspectRatio, Configuration, MinimumSize, Subreddit};
+use super::{
+	configuration::{AspectRatio, Configuration, MinimumSize, Subreddit},
+	server::ServerConfig,
+};
 
 pub static CONFIG_FILENAME: &str = "ridit.toml";
 
@@ -24,6 +28,7 @@ pub struct Config {
 	pub timeout: u32,
 	pub download_threads: usize,
 	pub path: PathBuf,
+	pub server: ServerConfig,
 	pub settings: Settings,
 	pub subreddits: Subreddits,
 }
@@ -84,12 +89,16 @@ impl Default for Config {
 			},
 		};
 		m.insert("mobile".to_string(), mobile_config);
-		let p = UserDirs::new()
-			.expect("cannot find user directory for current user")
+		let p = match UserDirs::new()
+			.expect("cannot find user directory")
 			.picture_dir()
-			.expect("cannot find picture directory for current user")
-			.to_path_buf()
-			.join("ridit");
+		{
+			Some(path) => path.join("ridit"),
+			None => home_dir()
+				.expect("cannot found home dir for current user")
+				.join("Pictures")
+				.join("ridit"),
+		};
 		Config {
 			focused_profile: "main".to_string(),
 			path: p,
@@ -97,6 +106,7 @@ impl Default for Config {
 			timeout: 10,
 			settings: m,
 			subreddits: subs,
+			server: ServerConfig::default(),
 		}
 	}
 }

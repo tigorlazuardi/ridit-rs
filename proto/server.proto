@@ -1,0 +1,24 @@
+syntax = "proto3";
+package ridit;
+
+service Ridit {
+	rpc State(EmptyMsg) returns (AppState);
+	rpc TriggerDownload(EmptyMsg) returns (stream DownloadStatus);
+}
+
+message EmptyMsg {}
+
+message AppState {
+	uint32 status = 1;
+	string message = 2;
+	string next_download_time = 3;
+}
+
+message DownloadStatus {
+	string subreddit_name = 1;
+	repeated string profiles = 2;
+	uint64 download_length = 3;
+	uint64 chunk_length = 4; 
+	bool finished = 5;
+	optional string error = 6;
+}

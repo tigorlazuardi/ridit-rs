@@ -1,39 +1,30 @@
-use std::{
-	convert::TryInto,
-	path::PathBuf,
-	sync::{Arc, Mutex},
-	time::Duration,
-	usize,
-};
+use std::{convert::TryInto, path::PathBuf, sync::Arc, time::Duration, usize};
 
 use anyhow::{bail, Context, Error, Result};
 use imagesize::blob_size;
 
-use pad::PadStr;
 use reqwest::{header::RANGE, Client, Response};
 use tokio::{
 	fs::{self, File},
 	io::AsyncWriteExt,
-	sync::Semaphore,
+	sync::{mpsc::UnboundedSender, Semaphore},
 };
 use tokio_retry::{
 	strategy::{jitter, FixedInterval},
 	Retry,
 };
 
-use super::models::download_meta::DownloadMeta;
+use super::models::{download_meta::DownloadMeta, download_status::DownloadStatus};
 use crate::api::{
 	config::{config::Config, configuration::Subreddit},
 	reddit::models::listing::Listing,
 };
-use linya::Progress;
 
 #[derive(Clone, Debug)]
 pub struct Repository {
 	client: Arc<Client>,
 	config: Arc<Config>,
 	semaphore: Arc<Semaphore>,
-	multibar: Arc<Mutex<Progress>>,
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord)]
@@ -67,17 +58,22 @@ impl Repository {
 			client: Arc::new(client),
 			config,
 			semaphore,
-			multibar: Arc::new(Mutex::new(Progress::new())),
 		}
 	}
 
-	pub async fn download(&self, display: PrintOut) -> Vec<Result<DownloadMeta, Error>> {
+	pub async fn download(
+		&self,
+		display: PrintOut,
+		progress: UnboundedSender<DownloadStatus>,
+	) -> Vec<(DownloadMeta, Result<(), Error>)> {
 		let mut handlers = Vec::new();
 
 		for (_, subreddit) in &self.config.subreddits {
 			let this = self.clone();
 			let subreddit = subreddit.clone();
-			let handle = tokio::spawn(async move { this.exec_download(subreddit, display).await });
+			let progress = progress.clone();
+			let handle =
+				tokio::spawn(async move { this.exec_download(subreddit, display, progress).await });
 			handlers.push(handle);
 		}
 		let mut v = Vec::new();
@@ -95,25 +91,25 @@ impl Repository {
 		&self,
 		subreddit: Subreddit,
 		display: PrintOut,
-	) -> Result<Vec<Result<DownloadMeta, Error>>> {
+		progress: UnboundedSender<DownloadStatus>,
+	) -> Result<Vec<(DownloadMeta, Result<(), Error>)>> {
 		let print = || {
-			println!("[{}] downloading listing", subreddit.proper_name);
+			println!("{} downloading listing", subreddit.padded_proper_name());
 		};
 		match display {
-			PrintOut::Bar => print(),
-			PrintOut::Text => print(),
-			_ => {}
+			PrintOut::None => {}
+			_ => print(),
 		}
 		let downloads = self.download_listing(&subreddit).await?;
-		Ok(self.download_images(downloads, subreddit, display).await)
+		Ok(self.download_images(downloads, subreddit, progress).await)
 	}
 
 	async fn download_images(
 		&self,
 		downloads: Vec<DownloadMeta>,
 		subreddit: Subreddit,
-		display: PrintOut,
-	) -> Vec<Result<DownloadMeta, Error>> {
+		progress: UnboundedSender<DownloadStatus>,
+	) -> Vec<(DownloadMeta, Result<(), Error>)> {
 		let mut handlers = Vec::new();
 		'meta: for mut meta in downloads.into_iter() {
 			for profile in &meta.profile {
@@ -124,12 +120,12 @@ impl Repository {
 			let this = self.clone();
 			let sem = self.semaphore.clone();
 			let subreddit = subreddit.clone();
+			let progress = progress.clone();
 			let handle = tokio::spawn(async move {
 				// release semaphore lock on end of scope
 				let _x = sem.acquire().await.unwrap();
-				this.download_image(&mut meta, subreddit, display)
-					.await
-					.map(|_| meta)
+				let op = this.download_image(&mut meta, subreddit, progress).await;
+				(meta, op)
 			});
 			handlers.push(handle);
 		}
@@ -171,7 +167,7 @@ impl Repository {
 		&self,
 		meta: &mut DownloadMeta,
 		subreddit: Subreddit,
-		display: PrintOut,
+		progress: UnboundedSender<DownloadStatus>,
 	) -> Result<()> {
 		if subreddit.download_first {
 			self.poke_image_size(meta).await?;
@@ -222,7 +218,7 @@ impl Repository {
 
 		self.ensure_download_dir(meta).await?;
 
-		let temp_file = self.store_to_temp(response, meta, display).await?;
+		let temp_file = self.store_to_temp(response, meta, progress).await?;
 
 		for profile in &meta.profile {
 			let download_location = self.download_location(profile, meta);
@@ -315,74 +311,39 @@ impl Repository {
 
 	async fn store_to_temp(
 		&self,
-		resp: Response,
+		mut resp: Response,
 		meta: &DownloadMeta,
-		display: PrintOut,
+		progress: UnboundedSender<DownloadStatus>,
 	) -> Result<PathBuf> {
 		let dir_path = std::env::temp_dir()
 			.join("ridit")
 			.join(&meta.subreddit_name);
 		fs::create_dir_all(&dir_path).await?;
 		let file_path = dir_path.join(&meta.filename);
-		let file = File::create(&file_path)
+		let mut file = File::create(&file_path)
 			.await
 			.context("cannot create file on tmp dir")?;
-		let noop = |_| {};
-		let prefix = prefix_gen(
-			&format!("{:?}", meta.profile),
-			&format!("[{}]", meta.subreddit_name),
-			&meta.url,
-		);
-		match display {
-			PrintOut::Bar => {
-				if let Some(length) = resp.content_length() {
-					let bar = self
-						.multibar
-						.lock()
-						.unwrap()
-						.bar(length.try_into().unwrap(), &prefix);
-					Repository::store_internal(resp, file, &meta.url, |lenght| {
-						self.multibar.lock().unwrap().inc_and_draw(&bar, lenght)
-					})
-					.await
-					.map_err(|err| {
-						println!("{} {}", prefix, "error");
-						err
-					})?;
-				} else {
-					Repository::store_internal(resp, file, &meta.url, noop).await?;
-				}
-			}
-			PrintOut::Text => {
-				println!("{}", prefix);
-				Repository::store_internal(resp, file, &meta.url, noop)
-					.await
-					.map_err(|err| {
-						println!("{} {}", prefix, "error");
-						err
-					})?;
-				println!("{} {}", prefix, "done");
-			}
-			PrintOut::None => {
-				Repository::store_internal(resp, file, &meta.url, noop).await?;
+
+		let download_length = resp.content_length().unwrap_or(0);
+		progress
+			.send(meta.as_download_status(download_length, 0))
+			.unwrap();
+		while let Some(chunk) = resp.chunk().await? {
+			progress
+				.send(meta.as_download_status(download_length, chunk.len().try_into().unwrap()))
+				.unwrap();
+
+			if let Err(err) = file.write(&chunk).await {
+				progress
+					.send(
+						meta.as_download_status(download_length, chunk.len().try_into().unwrap())
+							.with_error(err.to_string()),
+					)
+					.unwrap();
+				bail!("failed to save image from {}. cause: {}", meta.url, err)
 			}
 		}
 		Ok(file_path)
-	}
-
-	async fn store_internal<F: Fn(usize)>(
-		mut resp: Response,
-		mut file: File,
-		url: &str,
-		f: F,
-	) -> Result<()> {
-		while let Some(chunk) = resp.chunk().await? {
-			f(chunk.len());
-			file.write(&chunk)
-				.await
-				.with_context(|| format!("failed to save image from {}", url))?;
-		}
-		Ok(())
 	}
 
 	/// Checks to reddit if subreddit exists
@@ -411,8 +372,4 @@ impl Repository {
 			None => Ok(false),
 		}
 	}
-}
-
-fn prefix_gen(profiles: &str, subreddit: &str, url: &str) -> String {
-	profiles.with_exact_width(15) + &subreddit.with_exact_width(23) + &url.with_exact_width(36)
 }
