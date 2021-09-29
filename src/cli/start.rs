@@ -1,5 +1,5 @@
 use atty::Stream;
-use std::{collections::HashMap, convert::TryInto, fmt::Display, sync::Arc};
+use std::{collections::HashMap, convert::TryInto, sync::Arc};
 use tokio::sync::mpsc::{self, UnboundedReceiver};
 
 use anyhow::Result;
@@ -12,6 +12,8 @@ use crate::api::{
 	},
 };
 
+use fasthash::city::Hash64;
+use fasthash::RandomState;
 use linya::{Bar, Progress};
 use pad::PadStr;
 
@@ -56,7 +58,8 @@ async fn display(rx: UnboundedReceiver<DownloadStatus>) {
 
 async fn display_bar(mut rx: UnboundedReceiver<DownloadStatus>) {
 	let mut mpb = Progress::new();
-	let mut bars: HashMap<String, Bar> = HashMap::new();
+	let s = RandomState::<Hash64>::new();
+	let mut bars: HashMap<String, Bar, RandomState<Hash64>> = HashMap::with_hasher(s);
 	while let Some(status) = rx.recv().await {
 		if status.download_length == 0 {
 			continue;

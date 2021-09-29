@@ -73,7 +73,7 @@ impl Subreddit {
 	}
 
 	pub fn padded_proper_name(&self) -> String {
-		("[".to_string() + &self.proper_name + "]").pad_to_width(22)
+		("[".to_string() + &self.proper_name + "]").pad_to_width(23)
 	}
 }
 
