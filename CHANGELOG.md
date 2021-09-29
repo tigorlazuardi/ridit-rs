@@ -2,6 +2,44 @@
 ## [Unreleased]
 
 
+<a name="v0.4.10"></a>
+## [v0.4.10] - 2021-09-29
+### Feature
+- **cli-aspect-ratio:** added text response on configuration for minimum-size
+- **cli-aspect-ratio:** added text response on configuration edit
+- **config:** added profile command
+- **config:** added server port setting
+- **docker:** added dockerfile
+- **server:** added state status
+- **server:** added port and ip configuration
+- **server:** impl From for ProtoDownloadMeta from DownloadMeta
+
+### Fix
+- removed helloworld proto load from code
+- **config:** default config path now will not panic, but instead raw string paths only
+
+### Perf
+- **cli-start:** uses fasthash hasher to display cli bar more smoothly
+
+### Refactor
+- **cli:** display bars are prettier
+- **cli-start:** simplify bar prefix code
+- **download_meta:** removed unnecessary codes
+- **proto:** split profile and server into separate protos
+- **reddit:** now download status is handled via streams
+- **server.proto:** added download meta
+
+### Revert
+- **cargo.toml:** release profile will not prioritize size for speed reason
+
+### WIP
+- **proto:** added skeleton for ridit proto
+- **proto:** added ridit service and profile service
+
+### Wip
+- **grpc:** added grpc template
+
+
 <a name="v0.4.9"></a>
 ## [v0.4.9] - 2021-09-20
 ### Feature
@@ -253,7 +291,8 @@
 - **cli:** moved functions to method
 
 
-[Unreleased]: https://github.com/tigorlazuardi/ridit-rs/compare/v0.4.9...HEAD
+[Unreleased]: https://github.com/tigorlazuardi/ridit-rs/compare/v0.4.10...HEAD
+[v0.4.10]: https://github.com/tigorlazuardi/ridit-rs/compare/v0.4.9...v0.4.10
 [v0.4.9]: https://github.com/tigorlazuardi/ridit-rs/compare/v0.4.8...v0.4.9
 [v0.4.8]: https://github.com/tigorlazuardi/ridit-rs/compare/v0.4.7...v0.4.8
 [v0.4.7]: https://github.com/tigorlazuardi/ridit-rs/compare/v0.4.6...v0.4.7
