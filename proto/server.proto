@@ -15,20 +15,10 @@ message AppState {
 }
 
 message DownloadStatus {
-	DownloadMeta meta = 1;
-	uint32 download_size = 2;
-	uint32 downloaded = 3; 
-}
-
-message DownloadMeta {
-	string url = 1;
-	string subreddit_name = 2;
-	uint32 image_height = 3;
-	uint32 image_width = 4;
-	string post_link = 5;
-	bool nsfw = 6;
-	string filename = 7;
-	string title = 8;
-	string author = 9;
-	repeated string profile = 10;
+	string subreddit_name = 1;
+	repeated string profiles = 2;
+	uint64 download_length = 3;
+	uint64 chunk_length = 4; 
+	bool finished = 5;
+	optional string error = 6;
 }

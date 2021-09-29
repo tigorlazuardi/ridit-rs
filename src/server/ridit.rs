@@ -65,8 +65,7 @@ impl RiditController {
 #[tonic::async_trait]
 impl Ridit for RiditController {
 	async fn state(&self, _: Request<EmptyMsg>) -> Result<Response<AppState>, Status> {
-		let s = (*self.state.lock().unwrap()).clone();
-		Ok(Response::new(s.into()))
+		Ok(Response::new(self.state.lock().unwrap().to_owned().into()))
 	}
 
 	type TriggerDownloadStream = ReceiverStream<Result<DownloadStatus, Status>>;
