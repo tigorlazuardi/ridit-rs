@@ -1021,7 +1021,7 @@ dependencies = [
 
 [[package]]
 name = "ridit"
-version = "0.4.7"
+version = "0.4.10"
 dependencies = [
  "anyhow",
  "atty",
@@ -1034,6 +1034,7 @@ dependencies = [
  "pad",
  "prost",
  "reqwest",
+ "scopeguard",
  "serde",
  "serde_json",
  "structopt",

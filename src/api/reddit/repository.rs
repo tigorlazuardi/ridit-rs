@@ -343,6 +343,9 @@ impl Repository {
 				bail!("failed to save image from {}. cause: {}", meta.url, err)
 			}
 		}
+		progress
+			.send(meta.as_download_status(download_length, 0).set_finished())
+			.unwrap();
 		Ok(file_path)
 	}
 

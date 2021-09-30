@@ -7,12 +7,18 @@ use std::{
 	sync::{Arc, Mutex},
 };
 
-use crate::api::config::config::Config;
+use crate::api::{
+	config::config::{read_config, Config},
+	reddit::repository::{PrintOut, Repository},
+};
 
+use anyhow::Error;
 use chrono::{DateTime, Duration, Local, SecondsFormat, Timelike};
 use ridit_proto::ridit_server::Ridit;
-use ridit_proto::{AppState, DownloadStatus, EmptyMsg};
-use tokio_stream::wrappers::ReceiverStream;
+use ridit_proto::{AppState, DownloadStatus as ProtoDownloadStatus, EmptyMsg};
+use scopeguard::defer;
+use tokio::sync::mpsc;
+use tokio_stream::wrappers::UnboundedReceiverStream;
 use tonic::{Request, Response, Status};
 
 #[derive(Debug, Clone)]
@@ -68,12 +74,46 @@ impl Ridit for RiditController {
 		Ok(Response::new(self.state.lock().unwrap().to_owned().into()))
 	}
 
-	type TriggerDownloadStream = ReceiverStream<Result<DownloadStatus, Status>>;
+	type TriggerDownloadStream = UnboundedReceiverStream<Result<ProtoDownloadStatus, Status>>;
 
 	async fn trigger_download(
 		&self,
 		_request: Request<EmptyMsg>,
 	) -> Result<Response<Self::TriggerDownloadStream>, Status> {
-		Err(Status::unimplemented("sorry, not ready yet"))
+		let config = read_config()
+			.await
+			.map_err(|err| Status::failed_precondition(err.to_string()))?;
+		let (tx, mut rx) = mpsc::unbounded_channel();
+		let (tx_proto, rx_proto) = mpsc::unbounded_channel::<Result<ProtoDownloadStatus, Status>>();
+
+		{
+			let mut state = self.state.lock().unwrap();
+			state.status = 1;
+			state.message = "downloading".to_string();
+		}
+
+		defer! {
+			let mut state = self.state.lock().unwrap();
+			state.status = 0;
+			state.message = "standby".to_string();
+		}
+
+		tokio::spawn({
+			let tx = tx.clone();
+			async move {
+				let repo = Repository::new(Arc::new(config));
+				// TODO: add sqlite integration later
+				repo.download(PrintOut::None, tx).await;
+				Ok::<(), Error>(())
+			}
+		});
+
+		tokio::spawn(async move {
+			while let Some(status) = rx.recv().await {
+				tx_proto.send(Ok(status.into())).unwrap();
+			}
+		});
+
+		Ok(Response::new(UnboundedReceiverStream::new(rx_proto)))
 	}
 }
