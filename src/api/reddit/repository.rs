@@ -290,8 +290,14 @@ impl Repository {
 		let size = blob_size(&data)
 			.with_context(|| format!("error getting image dimension from: {}", meta.url))?;
 
-		meta.image_height = size.height;
-		meta.image_width = size.width;
+		meta.image_height = size
+			.height
+			.try_into()
+			.with_context(|| "image height is too big to process")?;
+		meta.image_width = size
+			.width
+			.try_into()
+			.with_context(|| "image width is too big to process")?;
 		Ok(())
 	}
 

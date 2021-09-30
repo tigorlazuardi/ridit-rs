@@ -119,7 +119,7 @@ pub struct ChildrenData {
 
 impl ChildrenData {
 	/// Returned tuple looks like this `(width, height)`
-	pub fn get_image_size(&self) -> Option<(usize, usize)> {
+	pub fn get_image_size(&self) -> Option<(u32, u32)> {
 		if let Some(preview) = &self.preview {
 			return preview.get_image_size();
 		}
@@ -147,7 +147,7 @@ pub struct Preview {
 
 impl Preview {
 	/// tuple looks like this `(width, height)`
-	pub fn get_image_size(&self) -> Option<(usize, usize)> {
+	pub fn get_image_size(&self) -> Option<(u32, u32)> {
 		if let Some(img) = self.images.get(0) {
 			let source = &img.source;
 			return Some((source.width, source.height));
@@ -166,8 +166,8 @@ pub struct Image {
 #[derive(Deserialize)]
 pub struct Source {
 	pub url: String,
-	pub width: usize,
-	pub height: usize,
+	pub width: u32,
+	pub height: u32,
 }
 
 #[derive(Deserialize)]

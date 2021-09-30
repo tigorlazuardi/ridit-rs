@@ -28,9 +28,9 @@ message DownloadStatus {
 service Profile {
 	// updates or inserts a profile. Existing profile will have given fields updated and keep the rest the same.
 	// When adding new profile, missing fields uses default values.
-	rpc Upsert(ProfileUpsert) returns (ConfigReply);
+	rpc Upsert(ProfileUpsert) returns (Reply);
 	// removes profile
-	rpc Remove(ProfileRemove) returns (ConfigReply);
+	rpc Remove(ProfileRemove) returns (Reply);
 	// list profiles
 	rpc List(EmptyMsg) returns (ProfileListMap);
 }
@@ -54,14 +54,8 @@ message ProfileRemove {
 	string name = 1;
 }
 
-enum Result {
-    ok = 0;
-    error = 1;
-}
-
-message ConfigReply {
-	Result message = 1;
-	string error = 2;
+message Reply {
+	string message = 2;
 }
 
 message AspectRatio {

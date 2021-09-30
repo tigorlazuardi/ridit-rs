@@ -13,10 +13,10 @@ pub enum MinimumSize {
 	Disable,
 	/// Set minimum size height for focused profile
 	#[structopt(visible_alias = "h")]
-	Height { input: usize },
+	Height { input: u32 },
 	/// Set minimum size width for focused profile
 	#[structopt(visible_alias = "w")]
-	Width { input: usize },
+	Width { input: u32 },
 }
 
 impl MinimumSize {
@@ -52,7 +52,7 @@ impl MinimumSize {
 		Ok(())
 	}
 
-	async fn height(&self, input: usize, config: &mut Config) -> Result<()> {
+	async fn height(&self, input: u32, config: &mut Config) -> Result<()> {
 		let cfg = config.get_mut_configuration()?;
 		cfg.minimum_size.height = input;
 		write_config(config).await?;
@@ -63,7 +63,7 @@ impl MinimumSize {
 		Ok(())
 	}
 
-	async fn width(&self, input: usize, config: &mut Config) -> Result<()> {
+	async fn width(&self, input: u32, config: &mut Config) -> Result<()> {
 		let cfg = config.get_mut_configuration()?;
 		cfg.minimum_size.width = input;
 		write_config(config).await?;

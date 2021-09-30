@@ -21,8 +21,8 @@ impl Default for Configuration {
 #[derive(Debug, Deserialize, Clone, Copy, Serialize)]
 pub struct AspectRatio {
 	pub enable: bool,
-	pub height: usize,
-	pub width: usize,
+	pub height: u32,
+	pub width: u32,
 	pub range: f32,
 }
 
@@ -40,8 +40,8 @@ impl Default for AspectRatio {
 #[derive(Debug, Deserialize, Clone, Copy, Serialize)]
 pub struct MinimumSize {
 	pub enable: bool,
-	pub height: usize,
-	pub width: usize,
+	pub height: u32,
+	pub width: u32,
 }
 
 impl Default for MinimumSize {

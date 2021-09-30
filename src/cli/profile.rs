@@ -68,10 +68,10 @@ pub struct AddOption {
 	pub disable_aspect_ratio_check: bool,
 	/// aspect ratio height to check
 	#[structopt(long, default_value = "9")]
-	pub aspect_ratio_height: usize,
+	pub aspect_ratio_height: u32,
 	/// aspect ratio width to check
 	#[structopt(long, default_value = "16")]
-	pub aspect_ratio_width: usize,
+	pub aspect_ratio_width: u32,
 	/// aspect ratio range to check
 	#[structopt(long, default_value = "0.3")]
 	pub aspect_ratio_range: f32,
@@ -80,10 +80,10 @@ pub struct AddOption {
 	pub disable_minimum_size_check: bool,
 	/// minimum size height to check
 	#[structopt(long, default_value = "1080")]
-	pub minimum_size_height: usize,
+	pub minimum_size_height: u32,
 	/// minimum size width to check
 	#[structopt(long, default_value = "1920")]
-	pub minimum_size_width: usize,
+	pub minimum_size_width: u32,
 	/// profile name to add
 	pub profile_name: String,
 }

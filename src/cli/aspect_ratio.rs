@@ -16,10 +16,10 @@ pub enum AspectRatio {
 	Range { input: f32 },
 	/// Set aspect ratio height
 	#[structopt(visible_alias = "h")]
-	Height { input: usize },
+	Height { input: u32 },
 	/// Set aspect ratio width
 	#[structopt(visible_alias = "w")]
-	Width { input: usize },
+	Width { input: u32 },
 }
 
 impl AspectRatio {
@@ -56,7 +56,7 @@ impl AspectRatio {
 		Ok(())
 	}
 
-	async fn height(&self, input: usize, config: &mut Config) -> Result<()> {
+	async fn height(&self, input: u32, config: &mut Config) -> Result<()> {
 		let cfg = config.get_mut_configuration()?;
 		cfg.aspect_ratio.height = input;
 		write_config(config).await?;
@@ -67,7 +67,7 @@ impl AspectRatio {
 		Ok(())
 	}
 
-	async fn width(&self, input: usize, config: &mut Config) -> Result<()> {
+	async fn width(&self, input: u32, config: &mut Config) -> Result<()> {
 		let cfg = config.get_mut_configuration()?;
 		cfg.aspect_ratio.width = input;
 		write_config(config).await?;
