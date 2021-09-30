@@ -35,8 +35,6 @@ service Profile {
 	rpc List(EmptyMsg) returns (ProfileListMap);
 }
 
-message EmptyMsg {}
-
 message ProfileUpsert {
 	string name = 1;
 	optional AspectRatioOptional aspect_ratio = 2;

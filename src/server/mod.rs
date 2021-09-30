@@ -1,3 +1,8 @@
+pub mod ridit_proto {
+	tonic::include_proto!("ridit");
+}
+
+pub mod profile;
 pub mod ridit;
 
 use std::{
@@ -5,7 +10,7 @@ use std::{
 	sync::{Arc, Mutex},
 };
 
-use ridit::ridit_proto::ridit_server::RiditServer;
+use ridit_proto::ridit_server::RiditServer;
 use tonic::transport::Server;
 
 use crate::api::config::config::Config;

@@ -1,7 +1,3 @@
-pub mod ridit_proto {
-	tonic::include_proto!("ridit");
-}
-
 use std::{
 	ops::Add,
 	sync::{Arc, Mutex},
@@ -12,10 +8,10 @@ use crate::api::{
 	reddit::repository::{PrintOut, Repository},
 };
 
+use super::ridit_proto::ridit_server::Ridit;
+use super::ridit_proto::{AppState, DownloadStatus as ProtoDownloadStatus, EmptyMsg};
 use anyhow::Error;
 use chrono::{DateTime, Duration, Local, SecondsFormat, Timelike};
-use ridit_proto::ridit_server::Ridit;
-use ridit_proto::{AppState, DownloadStatus as ProtoDownloadStatus, EmptyMsg};
 use tokio::sync::mpsc;
 use tokio_stream::wrappers::UnboundedReceiverStream;
 use tonic::{Request, Response, Status};

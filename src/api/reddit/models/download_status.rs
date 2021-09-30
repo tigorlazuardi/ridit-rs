@@ -1,4 +1,4 @@
-use crate::server::ridit::ridit_proto::DownloadStatus as ProtoDownloadStatus;
+use crate::server::ridit_proto::DownloadStatus as ProtoDownloadStatus;
 
 use pad::PadStr;
 
