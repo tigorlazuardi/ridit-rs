@@ -16,7 +16,6 @@ use anyhow::Error;
 use chrono::{DateTime, Duration, Local, SecondsFormat, Timelike};
 use ridit_proto::ridit_server::Ridit;
 use ridit_proto::{AppState, DownloadStatus as ProtoDownloadStatus, EmptyMsg};
-use scopeguard::defer;
 use tokio::sync::mpsc;
 use tokio_stream::wrappers::UnboundedReceiverStream;
 use tonic::{Request, Response, Status};
@@ -88,22 +87,23 @@ impl Ridit for RiditController {
 
 		{
 			let mut state = self.state.lock().unwrap();
-			state.status = 1;
-			state.message = "downloading".to_string();
-		}
-
-		defer! {
-			let mut state = self.state.lock().unwrap();
-			state.status = 0;
-			state.message = "standby".to_string();
+			*state = State {
+				status: 1,
+				message: "downloading".to_string(),
+				next_download_time: Local::now()
+					.add(Duration::minutes(1))
+					.with_second(0)
+					.unwrap(),
+			};
 		}
 
 		tokio::spawn({
-			let tx = tx.clone();
+			let state = self.state.clone();
 			async move {
 				let repo = Repository::new(Arc::new(config));
 				// TODO: add sqlite integration later
 				repo.download(PrintOut::None, tx).await;
+				*state.lock().unwrap() = State::default();
 				Ok::<(), Error>(())
 			}
 		});
