@@ -2,6 +2,12 @@
 ## [Unreleased]
 
 
+<a name="v0.4.11"></a>
+## [v0.4.11] - 2021-09-30
+### Feature
+- **server:** implemented download trigger
+
+
 <a name="v0.4.10"></a>
 ## [v0.4.10] - 2021-09-29
 ### Feature
@@ -291,7 +297,8 @@
 - **cli:** moved functions to method
 
 
-[Unreleased]: https://github.com/tigorlazuardi/ridit-rs/compare/v0.4.10...HEAD
+[Unreleased]: https://github.com/tigorlazuardi/ridit-rs/compare/v0.4.11...HEAD
+[v0.4.11]: https://github.com/tigorlazuardi/ridit-rs/compare/v0.4.10...v0.4.11
 [v0.4.10]: https://github.com/tigorlazuardi/ridit-rs/compare/v0.4.9...v0.4.10
 [v0.4.9]: https://github.com/tigorlazuardi/ridit-rs/compare/v0.4.8...v0.4.9
 [v0.4.8]: https://github.com/tigorlazuardi/ridit-rs/compare/v0.4.7...v0.4.8
