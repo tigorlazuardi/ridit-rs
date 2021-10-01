@@ -2,6 +2,7 @@ pub mod ridit_proto {
 	tonic::include_proto!("ridit");
 }
 
+pub mod foreign_impl;
 pub mod profile;
 pub mod ridit;
 
