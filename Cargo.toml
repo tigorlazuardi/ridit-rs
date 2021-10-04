@@ -1,48 +1,48 @@
 [package]
+build = 'src/build.rs'
+edition = '2018'
 name = 'ridit'
 version = '0.4.10'
-edition = '2018'
-build = 'src/build.rs'
 
 [dependencies]
-structopt = '0.3'
-directories = '4.0'
-toml = '0.5'
-tokio-retry = '0.3'
-imagesize = '0.9.0'
-serde_json = '1.0'
-linya = '0.2'
 atty = '0.2'
-pad = '0.1.6'
-tonic = '0.5'
-prost = '0.8'
-tokio-stream = '0.1'
 chrono = '0.4'
+directories = '4.0'
 dirs = '4.0'
-fasthash = '0.4'
+imagesize = '0.9.0'
+linya = '0.2'
+pad = '0.1.6'
+prost = '0.8'
+serde_json = '1.0'
+structopt = '0.3'
+tokio-retry = '0.3'
+tokio-stream = '0.1'
+toml = '0.5'
+tonic = '0.5'
+twox-hash = "1.6.1"
 
 [dependencies.anyhow]
-version = '1'
 features = [
-    'std',
-    'backtrace',
+  'std',
+  'backtrace',
 ]
+version = '1'
 
 [dependencies.reqwest]
-version = '0.11'
-features = [
-    'json',
-    'rustls-tls',
-]
 default-features = false
+features = [
+  'json',
+  'rustls-tls',
+]
+version = '0.11'
 
 [dependencies.tokio]
-version = '1.12'
 features = ['full']
+version = '1.12'
 
 [dependencies.serde]
-version = '1.0'
 features = ['derive']
+version = '1.0'
 
 [build-dependencies]
 tonic-build = '0.5'

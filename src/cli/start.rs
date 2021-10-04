@@ -12,9 +12,8 @@ use crate::api::{
 	},
 };
 
-use fasthash::city::Hash64;
-use fasthash::RandomState;
-use linya::{Bar, Progress};
+use linya::Progress;
+use twox_hash::RandomXxHashBuilder64;
 
 /// Start downloading once
 pub async fn start(config: &Config) -> Result<()> {
@@ -57,8 +56,8 @@ async fn display(rx: UnboundedReceiver<DownloadStatus>) {
 
 async fn display_bar(mut rx: UnboundedReceiver<DownloadStatus>) {
 	let mut mpb = Progress::new();
-	let s = RandomState::<Hash64>::new();
-	let mut bars: HashMap<String, Bar, RandomState<Hash64>> = HashMap::with_hasher(s);
+	let s = RandomXxHashBuilder64::default();
+	let mut bars = HashMap::with_hasher(s);
 	while let Some(status) = rx.recv().await {
 		if status.download_length == 0 {
 			continue;
