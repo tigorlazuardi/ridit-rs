@@ -221,9 +221,7 @@ impl Repository {
 				"download from {} gives [{}: {}] status code",
 				meta.url,
 				status.as_u16(),
-				status
-					.canonical_reason()
-					.unwrap_or_else(|| "Unknown Reason"),
+				status.canonical_reason().unwrap_or("Unknown Reason"),
 			));
 		}
 
