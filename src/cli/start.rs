@@ -17,16 +17,14 @@ use twox_hash::RandomXxHashBuilder64;
 
 /// Start downloading once
 pub async fn start(config: &Config) -> Result<()> {
-	let cfg = Arc::new(config.to_owned());
-	let repo = Repository::new(cfg.clone());
+	let config = Arc::new(config.to_owned());
+	let repo = Repository::new(config);
 
-	let text: PrintOut;
-
-	if atty::is(Stream::Stdout) {
-		text = PrintOut::Bar;
+	let text = if atty::is(Stream::Stdout) {
+		PrintOut::Bar
 	} else {
-		text = PrintOut::Text;
-	}
+		PrintOut::Text
+	};
 
 	let (tx, rx) = mpsc::unbounded_channel();
 
