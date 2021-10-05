@@ -20,6 +20,7 @@ tokio-stream = '0.1'
 toml = '0.5'
 tonic = '0.5'
 twox-hash = "1.6.1"
+thiserror = "1.0.29"
 
 [dependencies.anyhow]
 features = [

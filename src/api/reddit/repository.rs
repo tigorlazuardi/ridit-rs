@@ -72,16 +72,16 @@ impl Repository {
 			let this = self.clone();
 			let subreddit = subreddit.clone();
 			let progress = progress.clone();
-			let handle =
-				tokio::spawn(async move { this.exec_download(subreddit, display, progress).await });
+			let handle = tokio::spawn(async move {
+				Ok::<_, Error>(this.exec_download(subreddit, display, progress).await?)
+			});
 			handlers.push(handle);
 		}
 		let mut v = Vec::new();
 		for handle in handlers {
-			let op = handle.await.unwrap();
-			match op {
-				Ok(res) => v.extend(res),
-				Err(err) => println!("{:#?}", err),
+			match handle.await.unwrap() {
+				Ok(vec) => v.extend(vec),
+				Err(err) => println!("{:?}", err),
 			}
 		}
 		v
