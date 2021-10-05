@@ -17,7 +17,7 @@ use tokio_retry::{
 use super::models::{download_meta::DownloadMeta, download_status::DownloadStatus};
 use crate::api::{
 	config::{config::Config, configuration::Subreddit},
-	reddit::models::listing::Listing,
+	reddit::models::{error::RedditError, listing::Listing},
 };
 
 #[derive(Clone, Debug)]
@@ -154,6 +154,17 @@ impl Repository {
 				listing_url
 			)
 		})?;
+
+		if !resp.status().is_success() {
+			let err = resp.json::<RedditError>().await.with_context(|| {
+				format!("failed to deserialize json body from: {}", listing_url)
+			})?;
+			bail!(
+				"downloading listing from [{}] give error: {}",
+				subreddit.proper_name,
+				err
+			);
+		}
 
 		let listing: Listing = resp
 			.json()
